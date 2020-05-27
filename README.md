@@ -1,4 +1,6 @@
-# sengng440project
+# Seng440 project
+
+A project on Singular Value Decomposition (SVD) and optimizing its performance on an arm machine.
 
 ## Requirements
 

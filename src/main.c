@@ -4,9 +4,13 @@
  *
  */
 
+#include "config.h"
+#include "svd.h"
+
 #include <stdio.h>
 volatile int c;
 
+/* Template code */
 int add(int a, int b) { return a + b; }
 
 int main(void)

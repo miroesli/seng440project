@@ -36,6 +36,8 @@ ipv6.disable=1
 
 ### Compile into assembly
 
+_If arm-linux-gcc is not recognized, use `gcc` instead_
+
 ```bash
 arm-linux-gcc -static -S file.c
 ```

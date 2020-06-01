@@ -54,7 +54,16 @@ To assemble modifications
 arm-linux-gcc -static file.s
 ```
 
+```bash
 arm-none-linux-gnueabi-gcc -static -march=armv5 file.c -o file.exe
+```
+
+Compile floating point assembly
+
+```bash
+arm-linux-gcc -mfloat-abi=soft-S file.c
+arm-linux-gcc -mfloat-abi=softfp-S file.c
+```
 
 ### CPU profiling and Profile-driven compilation
 

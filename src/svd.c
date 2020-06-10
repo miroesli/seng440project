@@ -65,8 +65,8 @@ void sweep(double m[4][4], double u[4][4], double v_trans[4][4])
              * TODO: Implement all of these functions.
              * 
              */
-            double theta_sum = arctan(1, (m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
-            double theta_diff = arctan(1, (m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
+            double theta_sum = atan((m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
+            double theta_diff = atan((m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
             double theta_l = (theta_sum - theta_diff) / 2;
             double theta_r = theta_sum - theta_l;
             double sin_theta_l = sin(theta_l);

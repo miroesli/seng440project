@@ -31,25 +31,42 @@ void mat_mul(int size, double LHS[size][size], double RHS[size][size], double ou
 }
 
 /**
+ * @brief Function to obtain arctan using integer / fixed-point arithmetic
+ * and taylor series expansion
+ * 
+ * Result is placed in out[][]
+ * 
+ * @param approximation
+ * @param out
+ * @return out
+ */
+double arctan(int approximation, double out)
+{
+    for (int i = 0; i < approximation; i++)
+    {
+        out += pow(-1, (i + 1)) * (1 / (i * 2 + 1)) * pow(out, (i * 2 + 1));
+    }
+    return out;
+}
+
+/**
  * @brief Performes a single sweep of the svd algorithm
  * 
  */
 void sweep(double m[4][4], double u[4][4], double v_trans[4][4])
 {
-
     for (int i = 0; i < 3; i++)
     {
         for (int j = i + 1; j < 4; j++)
         {
-
             /**
              * Do all of the angle calculations
              * 
              * TODO: Implement all of these functions.
              * 
              */
-            double theta_sum = atan((m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
-            double theta_diff = atan((m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
+            double theta_sum = arctan(1, (m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
+            double theta_diff = arctan(1, (m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
             double theta_l = (theta_sum - theta_diff) / 2;
             double theta_r = theta_sum - theta_l;
             double sin_theta_l = sin(theta_l);

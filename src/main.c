@@ -7,10 +7,6 @@
 #include "config.h"
 #include "svd.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
 double m[4][4] = {
     {31, 77, -11, 26},
     {-42, 14, 79, -53},

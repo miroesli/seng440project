@@ -17,12 +17,10 @@
  */
 void mat_mul(int size, double LHS[size][size], double RHS[size][size], double out[size][size])
 {
-
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size; j++)
         {
-
             out[i][j] = 0;
             for (int k = 0; k < size; k++)
             {

@@ -2,7 +2,7 @@
 
 ## Basics
 
-### Compile into assembly
+### Compile and assembly
 
 _If arm-linux-gcc is not recognized, use `gcc` instead_
 
@@ -10,7 +10,7 @@ _If arm-linux-gcc is not recognized, use `gcc` instead_
 arm-linux-gcc -static -S file.c
 ```
 
-add `-O3` for compiler optimization which does automated ufnction inlining
+add `-O3` for compiler optimization which does automated function inlining
 
 ```bash
 arm-linux-gcc -static -S -O3 file.c
@@ -31,6 +31,12 @@ Compile floating point assembly
 ```bash
 arm-linux-gcc -mfloat-abi=soft-S file.c
 arm-linux-gcc -mfloat-abi=softfp-S file.c
+```
+
+Compile with `arm_neon.h` library
+
+```
+gcc -mfpu=neon -03 -o outfile infile.c
 ```
 
 ### CPU profiling and Profile-driven compilation

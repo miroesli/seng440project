@@ -15,7 +15,7 @@
  * @param RHS 
  * @param out 
  */
-void mat_mul(int size, double LHS[size][size], double RHS[size][size], double out[size][size])
+void mat_mul(int size, floating_point_t LHS[size][size], floating_point_t RHS[size][size], floating_point_t out[size][size])
 {
     for (int i = 0; i < size; i++)
     {
@@ -40,7 +40,7 @@ void mat_mul(int size, double LHS[size][size], double RHS[size][size], double ou
  * @param out
  * @return out
  */
-double arctan(int approximation, double out)
+floating_point_t arctan(int approximation, floating_point_t out)
 {
     for (int i = 0; i < approximation; i++)
     {
@@ -53,7 +53,7 @@ double arctan(int approximation, double out)
  * @brief Performes a single sweep of the svd algorithm
  * 
  */
-void sweep(double m[4][4], double u[4][4], double v_trans[4][4])
+void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t v_trans[4][4])
 {
     for (int i = 0; i < 3; i++)
     {
@@ -65,34 +65,34 @@ void sweep(double m[4][4], double u[4][4], double v_trans[4][4])
              * TODO: Implement all of these functions.
              * 
              */
-            double theta_sum = atan((m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
-            double theta_diff = atan((m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
-            double theta_l = (theta_sum - theta_diff) / 2;
-            double theta_r = theta_sum - theta_l;
-            double sin_theta_l = sin(theta_l);
-            double cos_theta_l = cos(theta_l);
-            double sin_theta_r = sin(theta_r);
-            double cos_theta_r = cos(theta_r);
+            floating_point_t theta_sum = atan((m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
+            floating_point_t theta_diff = atan((m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
+            floating_point_t theta_l = (theta_sum - theta_diff) / 2;
+            floating_point_t theta_r = theta_sum - theta_l;
+            floating_point_t sin_theta_l = sin(theta_l);
+            floating_point_t cos_theta_l = cos(theta_l);
+            floating_point_t sin_theta_r = sin(theta_r);
+            floating_point_t cos_theta_r = cos(theta_r);
 
             /**
              * @brief Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
              * 
              */
-            double u_ij[4][4] = {
+            floating_point_t u_ij[4][4] = {
                 {1, 0, 0, 0},
                 {0, 1, 0, 0},
                 {0, 0, 1, 0},
                 {0, 0, 0, 1},
             };
 
-            double u_ij_trans[4][4] = {
+            floating_point_t u_ij_trans[4][4] = {
                 {1, 0, 0, 0},
                 {0, 1, 0, 0},
                 {0, 0, 1, 0},
                 {0, 0, 0, 1},
             };
 
-            double v_ij_trans[4][4] = {
+            floating_point_t v_ij_trans[4][4] = {
                 {1, 0, 0, 0},
                 {0, 1, 0, 0},
                 {0, 0, 1, 0},
@@ -129,10 +129,10 @@ void sweep(double m[4][4], double u[4][4], double v_trans[4][4])
             /**
              * Create temporary matricies for claculations.
              */
-            double u_prime[4][4];
-            double v_trans_prime[4][4];
-            double m_prime_tmp[4][4];
-            double m_prime[4][4];
+            floating_point_t u_prime[4][4];
+            floating_point_t v_trans_prime[4][4];
+            floating_point_t m_prime_tmp[4][4];
+            floating_point_t m_prime[4][4];
 
             // Do the calculations
             mat_mul(4, u, u_ij_trans, u_prime);             // [U][U_ij_T] = [U']

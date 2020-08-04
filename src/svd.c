@@ -24,29 +24,10 @@ void mat_mul(int size, floating_point_t LHS[size][size], floating_point_t RHS[si
             out[i][j] = 0;
             for (int k = 0; k < size; k++)
             {
-                out[i][j] += LHS[i][k] * RHS[k][j];
+                out[i][j] += fixed_point_mult(LHS[i][k], RHS[k][j]);
             }
         }
     }
-}
-
-/**
- * @brief Function to obtain arctan using integer / fixed-point arithmetic
- * and taylor series expansion
- * 
- * Result is placed in out[][]
- * 
- * @param approximation
- * @param out
- * @return out
- */
-floating_point_t arctan(int approximation, floating_point_t out)
-{
-    for (int i = 0; i < approximation; i++)
-    {
-        out += pow(-1, (i + 1)) * (1 / (i * 2 + 1)) * pow(out, (i * 2 + 1));
-    }
-    return out;
 }
 
 /**

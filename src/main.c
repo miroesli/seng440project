@@ -50,15 +50,10 @@ void mat_print(floating_point_t mat[4][4])
 int main(void)
 {
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 4; i++)
     {
         sweep(m, u, v_trans);
         mat_print(m);
         printf("\n");
     }
-
-    printf("U: \n");
-    mat_print(u);
-    printf("V_t:\n");
-    mat_print(v_trans);
 }

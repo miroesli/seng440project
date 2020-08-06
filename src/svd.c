@@ -7,7 +7,7 @@
 #include "svd_math.h"
 
 /**
- * @brief Helper function to multiply a (size x size) matrix
+ * @brief Perfoms a fixed point matrix multiplication
  * 
  * Result is placed in out[][]
  * 
@@ -31,10 +31,29 @@ void mat_mul(int size, fixed_point_t LHS[size][size], fixed_point_t RHS[size][si
     }
 }
 
-void mat_mul_u_x_u(int size, fixed_point_u_t LHS[size][size], fixed_point_u_t RHS[size][size], fixed_point_u_dp_t out[size][size]) __attribute__((alias("mat_mul")));
-void mat_mul_u_x_m(int size, fixed_point_u_t LHS[size][size], fixed_point_m_t RHS[size][size], fixed_point_m_tmp_dp_t out[size][size]) __attribute__((alias("mat_mul")));
-void mat_mul_m_x_v(int size, fixed_point_m_tmp_t LHS[size][size], fixed_point_v_t RHS[size][size], fixed_point_m_dp_t out[size][size]) __attribute__((alias("mat_mul")));
-void mat_mul_v_x_v(int size, fixed_point_v_t LHS[size][size], fixed_point_v_t RHS[size][size], fixed_point_v_dp_t out[size][size]) __attribute__((alias("mat_mul")));
+void mat_mul_u_x_u(
+    int size,
+    fixed_point_u_t LHS[size][size],
+    fixed_point_u_t RHS[size][size],
+    fixed_point_u_dp_t out[size][size]) __attribute__((alias("mat_mul")));
+
+void mat_mul_u_x_m(
+    int size,
+    fixed_point_u_t LHS[size][size],
+    fixed_point_m_t RHS[size][size],
+    fixed_point_m_tmp_dp_t out[size][size]) __attribute__((alias("mat_mul")));
+
+void mat_mul_m_x_v(
+    int size,
+    fixed_point_m_tmp_t LHS[size][size],
+    fixed_point_v_t RHS[size][size],
+    fixed_point_m_dp_t out[size][size]) __attribute__((alias("mat_mul")));
+
+void mat_mul_v_x_v(
+    int size,
+    fixed_point_v_t LHS[size][size],
+    fixed_point_v_t RHS[size][size],
+    fixed_point_v_dp_t out[size][size]) __attribute__((alias("mat_mul")));
 
 /**
  * @brief Performes a single sweep of the svd algorithm
@@ -66,7 +85,6 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
              * Do all of the angle calculations
              * 
              * TODO: Implement all of these functions.
-             * 
              */
             floating_point_t theta_sum = atan((m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
             floating_point_t theta_diff = atan((m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
@@ -152,7 +170,7 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             mat_mul_v_x_v(4, v_ij_trans, v_trans_fixed, v_trans_prime); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
 
             /**
-             * Copy the values into U, V, and M.
+             * Copy the values into U, V, and M and convert them back to floating point.
              * I think there we can avoid doing this for every ij pair, but for now this works.
              */
             for (int row = 0; row < 4; row++)

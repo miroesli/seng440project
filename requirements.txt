@@ -1,0 +1,2 @@
+# DEV only - For creating lookup table
+numpy==1.19.1

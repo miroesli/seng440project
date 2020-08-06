@@ -41,11 +41,6 @@ fixed_point_t truncate(fixed_point_double_t x)
 }
 
 /**
- * @brief Truncates a fixed_point_m_tmp_dp_t into a fixed_point_m_tmp_t
- */
-fixed_point_m_tmp_t truncate_m_tmp(fixed_point_m_tmp_dp_t m) __attribute__((alias("truncate")));
-
-/**
  * @brief Converts a fixed_point_double_t into a floating_point_t
  * 
  * You have to manually track the scale factor to make sure that this conversion is correct

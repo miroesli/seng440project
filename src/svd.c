@@ -62,32 +62,33 @@ void mat_mul_v_x_v(
 void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t v_trans[4][4])
 {
 
+    fixed_point_m_t m_fixed[4][4];
+    fixed_point_u_t u_fixed[4][4];
+    fixed_point_v_t v_trans_fixed[4][4];
+
+    // Convert the input matricies to fixed point.
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 4; col++)
+        {
+            m_fixed[row][col] = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
+            u_fixed[row][col] = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
+            v_trans_fixed[row][col] = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
+        }
+    }
+
     for (int i = 0; i < 3; i++)
     {
         for (int j = i + 1; j < 4; j++)
         {
-            fixed_point_m_t m_fixed[4][4];
-            fixed_point_u_t u_fixed[4][4];
-            fixed_point_v_t v_trans_fixed[4][4];
-
-            // Convert the input matricies to fixed point.
-            for (int row = 0; row < 4; row++)
-            {
-                for (int col = 0; col < 4; col++)
-                {
-                    m_fixed[row][col] = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
-                    u_fixed[row][col] = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
-                    v_trans_fixed[row][col] = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
-                }
-            }
 
             /**
              * Do all of the angle calculations
              * 
              * TODO: Implement all of these functions.
              */
-            floating_point_t theta_sum = atan((m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
-            floating_point_t theta_diff = atan((m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
+            floating_point_t theta_sum = atan((m_fixed[j][i] + m_fixed[i][j]) / (floating_point_t)(m_fixed[j][j] - m_fixed[i][i]));
+            floating_point_t theta_diff = atan((m_fixed[j][i] - m_fixed[i][j]) / (floating_point_t)(m_fixed[j][j] + m_fixed[i][i]));
             floating_point_t theta_l = (theta_sum - theta_diff) / 2;
             floating_point_t theta_r = theta_sum - theta_l;
             floating_point_t sin_theta_l = sin(theta_l);
@@ -163,7 +164,7 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    m_prime_tmp_trunc[row][col] = truncate_m_tmp(m_prime_tmp[row][col]);
+                    m_prime_tmp_trunc[row][col] = truncate(m_prime_tmp[row][col]);
                 }
             }
             mat_mul_m_x_v(4, m_prime_tmp_trunc, v_ij_trans, m_prime);   // [M_tmp][V_ij_T] = [M']
@@ -177,11 +178,21 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    u[row][col] = convert_to_floating(u_prime[row][col], SCALE_FACTOR_U_DP);
-                    v_trans[row][col] = convert_to_floating(v_trans_prime[row][col], SCALE_FACTOR_V_DP);
-                    m[row][col] = convert_to_floating(m_prime[row][col], SCALE_FACTOR_M_DP);
+                    u_fixed[row][col] = truncate(u_prime[row][col]);
+                    v_trans_fixed[row][col] = truncate(v_trans_prime[row][col]);
+                    m_fixed[row][col] = truncate(m_prime[row][col]);
                 }
             }
+        }
+    }
+
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 4; col++)
+        {
+            u[row][col] = convert_to_floating(u_fixed[row][col], SCALE_FACTOR_U);
+            v_trans[row][col] = convert_to_floating(v_trans_fixed[row][col], SCALE_FACTOR_V);
+            m[row][col] = convert_to_floating(m_fixed[row][col], SCALE_FACTOR_M);
         }
     }
 }

@@ -28,7 +28,7 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 
 fixed_point_t convert_to_fixed(floating_point_t f, size_t scale_factor);
 fixed_point_double_t fixed_point_mul(fixed_point_t, fixed_point_t);
-fixed_point_m_tmp_t truncate_m_tmp(fixed_point_m_tmp_dp_t);
+fixed_point_t truncate(fixed_point_m_tmp_dp_t);
 floating_point_t convert_to_floating(fixed_point_double_t f, size_t scale_factor);
 
 static const fixed_point_u_t one_u = (1 << SCALE_FACTOR_U);

@@ -171,8 +171,9 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             mat_mul_v_x_v(4, v_ij_trans, v_trans_fixed, v_trans_prime); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
 
             /**
-             * Copy the values into U, V, and M and convert them back to floating point.
+             * Copy the values into U, V, and M
              * I think there we can avoid doing this for every ij pair, but for now this works.
+             * it involves having output matricies and switching between them every iteration.
              */
             for (int row = 0; row < 4; row++)
             {

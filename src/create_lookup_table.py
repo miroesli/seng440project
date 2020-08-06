@@ -8,7 +8,6 @@ Based on trig function supplied run accordingly
 
 import sys
 import numpy as np
-import math
 
 # Size of the lookup table -> Integer bit size 13, 14th bit is used for sign in C code
 MAX_INPUT = 1 << 13
@@ -18,17 +17,6 @@ ARCTAN_TABLE_SIZE = 4096  # MAX_INPUT
 SCALE_FACTOR = 1 << 30
 # Precision of the lookup tables
 PRECISION = 3
-
-"""Print value and space or newline based on index in lookup table"""
-
-
-def print_value(val, index):
-    print("%d" % (val), end="")
-    if (index + 1) % 10 == 0:
-        print("")
-    else:
-        print(" ", end="")
-
 
 # TODO Consider creating and approximator instead for tan,
 # but for cos and sin just use lookup table. Also add precision
@@ -50,7 +38,12 @@ to be an integer.
 def create_lookup_table(value_function, size):
     for index in range(size):
         val = value_function(index)
-        print_value(val, index)
+        # print the value
+        print("%d" % (val), end="")
+        if (index + 1) % 10 == 0:
+            print("")
+        else:
+            print(" ", end="")
 
 
 """Print the correct usage of the script."""

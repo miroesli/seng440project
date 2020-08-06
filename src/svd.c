@@ -16,7 +16,7 @@
  * @param RHS 
  * @param out 
  */
-void mat_mul(int size, fixed_point_t LHS[size][size], fixed_point_t RHS[size][size], fixed_point_double_t out[size][size])
+void mat_mul(int size, fixed_point_t LHS[size][size], fixed_point_t RHS[size][size], fixed_point_t out[size][size])
 {
     for (int i = 0; i < size; i++)
     {
@@ -25,7 +25,7 @@ void mat_mul(int size, fixed_point_t LHS[size][size], fixed_point_t RHS[size][si
             out[i][j] = 0;
             for (int k = 0; k < size; k++)
             {
-                out[i][j] += fixed_point_mul(LHS[i][k], RHS[k][j]);
+                out[i][j] += truncate(fixed_point_mul(LHS[i][k], RHS[k][j]));
             }
         }
     }
@@ -35,25 +35,25 @@ void mat_mul_u_x_u(
     int size,
     fixed_point_u_t LHS[size][size],
     fixed_point_u_t RHS[size][size],
-    fixed_point_u_dp_t out[size][size]) __attribute__((alias("mat_mul")));
+    fixed_point_u_t out[size][size]) __attribute__((alias("mat_mul")));
 
 void mat_mul_u_x_m(
     int size,
     fixed_point_u_t LHS[size][size],
     fixed_point_m_t RHS[size][size],
-    fixed_point_m_tmp_dp_t out[size][size]) __attribute__((alias("mat_mul")));
+    fixed_point_m_tmp_t out[size][size]) __attribute__((alias("mat_mul")));
 
 void mat_mul_m_x_v(
     int size,
     fixed_point_m_tmp_t LHS[size][size],
     fixed_point_v_t RHS[size][size],
-    fixed_point_m_dp_t out[size][size]) __attribute__((alias("mat_mul")));
+    fixed_point_m_t out[size][size]) __attribute__((alias("mat_mul")));
 
 void mat_mul_v_x_v(
     int size,
     fixed_point_v_t LHS[size][size],
     fixed_point_v_t RHS[size][size],
-    fixed_point_v_dp_t out[size][size]) __attribute__((alias("mat_mul")));
+    fixed_point_v_t out[size][size]) __attribute__((alias("mat_mul")));
 
 /**
  * @brief Performes a single sweep of the svd algorithm
@@ -151,23 +151,15 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             /**
              * Create temporary matricies for claculations.
              */
-            fixed_point_u_dp_t u_prime[4][4];
-            fixed_point_v_dp_t v_trans_prime[4][4];
-            fixed_point_m_tmp_dp_t m_prime_tmp[4][4];
-            fixed_point_m_tmp_t m_prime_tmp_trunc[4][4];
-            fixed_point_m_dp_t m_prime[4][4];
+            fixed_point_u_t u_prime[4][4];
+            fixed_point_v_t v_trans_prime[4][4];
+            fixed_point_m_tmp_t m_prime_tmp[4][4];
+            fixed_point_m_t m_prime[4][4];
 
             // Do the calculations
-            mat_mul_u_x_u(4, u_fixed, u_ij_trans, u_prime); // [U][U_ij_T] = [U']
-            mat_mul_u_x_m(4, u_ij, m_fixed, m_prime_tmp);   // [U_ij][M] = [M'_tmp]
-            for (int row = 0; row < 4; row++)
-            {
-                for (int col = 0; col < 4; col++)
-                {
-                    m_prime_tmp_trunc[row][col] = truncate(m_prime_tmp[row][col]);
-                }
-            }
-            mat_mul_m_x_v(4, m_prime_tmp_trunc, v_ij_trans, m_prime);   // [M_tmp][V_ij_T] = [M']
+            mat_mul_u_x_u(4, u_fixed, u_ij_trans, u_prime);             // [U][U_ij_T] = [U']
+            mat_mul_u_x_m(4, u_ij, m_fixed, m_prime_tmp);               // [U_ij][M] = [M'_tmp]
+            mat_mul_m_x_v(4, m_prime_tmp, v_ij_trans, m_prime);         // [M_tmp][V_ij_T] = [M']
             mat_mul_v_x_v(4, v_ij_trans, v_trans_fixed, v_trans_prime); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
 
             /**
@@ -179,9 +171,9 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    u_fixed[row][col] = truncate(u_prime[row][col]);
-                    v_trans_fixed[row][col] = truncate(v_trans_prime[row][col]);
-                    m_fixed[row][col] = truncate(m_prime[row][col]);
+                    u_fixed[row][col] = u_prime[row][col];
+                    v_trans_fixed[row][col] = v_trans_prime[row][col];
+                    m_fixed[row][col] = m_prime[row][col];
                 }
             }
         }

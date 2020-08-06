@@ -17,9 +17,9 @@ typedef fixed_point_double_t fixed_point_v_dp_t;
 typedef fixed_point_double_t fixed_point_m_dp_t;
 typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 
-#define SCALE_FACTOR_U 30
+#define SCALE_FACTOR_U 31
 #define SCALE_FACTOR_U_DP 2 * SCALE_FACTOR_U + 1
-#define SCALE_FACTOR_V 30
+#define SCALE_FACTOR_V 31
 #define SCALE_FACTOR_V_DP 2 * SCALE_FACTOR_V + 1
 #define SCALE_FACTOR_M 17
 #define SCALE_FACTOR_M_tmp_DP SCALE_FACTOR_M + SCALE_FACTOR_V + 1

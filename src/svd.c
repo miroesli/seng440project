@@ -24,7 +24,7 @@ void mat_mul(int size, floating_point_t LHS[size][size], floating_point_t RHS[si
             out[i][j] = 0;
             for (int k = 0; k < size; k++)
             {
-                out[i][j] += fixed_point_mult(LHS[i][k], RHS[k][j]);
+                // out[i][j] += fixed_point_mult(LHS[i][k], RHS[k][j]);
             }
         }
     }

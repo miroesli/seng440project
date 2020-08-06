@@ -1,33 +1,26 @@
 #include "svd_math.h"
 #include "stdio.h"
 
-fixed_point_t convert_to_fixed_point(floating_point_t floating)
+fixed_point_t convert_to_fixed(floating_point_t floating, size_t scale_factor)
 {
-    // printf("Floating Point input: %f\n", floating);
-    fixed_point_t fixed = floating * (floating_point_t)(1 << FIXED_POINT_SCALE_FACTOR);
-    // printf("Fixed Point output: %d\n", fixed);
+    fixed_point_t fixed = floating * (floating_point_t)(1 << scale_factor);
     return fixed;
 }
 
-floating_point_t fixed_point_mult(floating_point_t x, floating_point_t y)
+fixed_point_u_dp_t fixed_point_mul(fixed_point_u_t LHS, fixed_point_u_t RHS)
 {
-    fixed_point_t LHS = convert_to_fixed_point(x);
-    fixed_point_t RHS = convert_to_fixed_point(y);
+    return (fixed_point_double_t)LHS * (fixed_point_double_t)RHS * 2;
+}
+fixed_point_u_dp_t fixed_point_mul_u_x_u(fixed_point_u_t LHS, fixed_point_u_t RHS) __attribute__((alias("fixed_point_mul")));
+fixed_point_m_tmp_dp_t fixed_point_mul_u_x_m(fixed_point_u_t LHS, fixed_point_m_t RHS) __attribute__((alias("fixed_point_mul")));
+fixed_point_m_dp_t fixed_point_mul_m_x_v(fixed_point_m_tmp_t LHS, fixed_point_v_t RHS) __attribute__((alias("fixed_point_mul")));
+fixed_point_v_dp_t fixed_point_mul_v_x_v(fixed_point_v_t LHS, fixed_point_v_t RHS) __attribute__((alias("fixed_point_mul")));
+fixed_point_m_tmp_t truncate_m_tmp(fixed_point_m_tmp_dp_t m)
+{
+    return m >> 32;
+}
 
-    int num_bits = sizeof(fixed_point_t) * 8;
-    int num_bits_double = sizeof(fixed_point_double_t) * 8;
-
-    // Calculate the sign of the product
-    char sign_x = 1 - 2 * ((unsigned)LHS >> (num_bits - 1));
-    char sign_y = 1 - 2 * ((unsigned)RHS >> (num_bits - 1));
-    char sign_pdp = sign_x * sign_y;
-    // Calculate the magnitude of the products
-    fixed_point_double_t mag_x = LHS * sign_x;
-    fixed_point_double_t mag_y = RHS * sign_y;
-    fixed_point_double_t mag_xy = mag_x * mag_y * 2;
-
-    fixed_point_double_t pdp = mag_xy >> (num_bits_double - num_bits);
-
-    floating_point_t pdp_floating = pdp / (floating_point_t)(1 << (DOUBLE_PRECISION_FIXED_POINT_SCALE_FACTOR - (num_bits_double - num_bits))); // Apply scale factor of 2^3
-    return pdp_floating * sign_pdp;
+floating_point_t convert_to_floating(fixed_point_double_t f, size_t scale_factor)
+{
+    return f / (floating_point_t)((fixed_point_double_t)1 << scale_factor);
 }

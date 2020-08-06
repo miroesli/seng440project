@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "svd.h"
+#include "svd_math.h"
 
 floating_point_t m[4][4] = {
     {31, 77, -11, 26},
@@ -55,4 +56,9 @@ int main(void)
         mat_print(m);
         printf("\n");
     }
+
+    printf("U: \n");
+    mat_print(u);
+    printf("V_t:\n");
+    mat_print(v_trans);
 }

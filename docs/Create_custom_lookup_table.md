@@ -14,12 +14,13 @@ Use `pip install -r requirements.txt` in root to install requried packages.
 Edit the global variables in the [create_lookup_table.py](../src/create_lookup_table.py) script according to your needs.
 
 - `ARCTAN_TABLE_SIZE` defines the size of the arctan lookup table.
-- `SCALE_FACTOR` defines the scaling to apply to the float values before returning as integers.
-- `PRECISION` defines the precision of the values. Maximum is 13 bits of info so
+- `SCALE_FACTOR` defines the scaling to apply to the float values for fixed-point notation.
+- `VALUES` defines the number of values between 0 and the size of the lookup table.
+<!-- - `PRECISION` defines the decimal precision of the values. Maximum is 13 bits of info so  -->
 
 ## Execution
 
-To run the script run using python and specify one of `sin`, `cos`, or `tan`.
+To run the script run using python and specify one of `sin`, `cos`, or `arctan`.
 
 ```bash
 python create_lookup_table.py tan

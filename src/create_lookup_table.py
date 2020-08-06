@@ -1,16 +1,14 @@
 """ Script to create a lookup table array for C
 
-The user provides an input between 0 and MAX_INPUT size in C
-If outside bounds, use +-pi/2
-
-Based on trig function supplied run accordingly
+A table for sin, cos or arctan is generated based on selection.
 """
 
 import sys
 import numpy as np
 
 # Range of arctan lookup table
-ARCTAN_TABLE_RANGE = 30  # MAX_INPUT
+ARCTAN_TABLE_RANGE = 30
+# Constant range
 SINCOS_TABLE_RANGE = 2 * np.pi
 # the resolution of the table
 VALUES = 300
@@ -22,30 +20,21 @@ SCALE_FACTOR = 1 << 31
 
 """Create lookup table
 arctan - call lookup with value [0, MAX_VALUE]
-(requries updating sign after result)
+Note: requries updating sign after result.
+sin/cos - call lookup with value [0, 2pi]
+Note: must modulo before providing input
 
-must multiply by values and divide by range to scale for table
+When accessing the table the user must multiply by values and divide
+by range to scale for table size and resolution.
 
----
-
-input range of arccos is [-1,1] but add 1 to scale to [0,2]
-when accessing lookup table. Input range for the lookup table
-will be between 0 and 2 scaled to an integer based on precision
-
-Input range is predefined based on precision desired.
-Maximum range is between 0 and integer size.
-
-If higher precision is used, assuming input is scaled accordingly
-to be an integer.
+This function prints the results in 10 columns to be
+stored in a c header file.
 """
 
 
 def create_lookup_table(value_function, range, values):
     for index, x in enumerate(np.arange(0, range, range/values)):
-        # print(x, index)
         y = value_function(x)
-        # print the value
-        # print("%010d" % (y), end="")
         print('{:= 11d}'.format((int(y))), end="")
         if (index + 1) % 10 == 0:
             print(",")
@@ -58,7 +47,7 @@ def create_lookup_table(value_function, range, values):
 
 def usage():
     print("Please provide the trig function you'd like to create a lookup table for.")
-    print("eg: python create_lookup_table.py [sin|cos|tan]")
+    print("eg: python create_lookup_table.py [sin|cos|arctan]")
 
 
 """Main function to evaluate which lookup table to create"""

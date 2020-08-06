@@ -16,18 +16,17 @@ Edit the global variables in the [create_lookup_table.py](../src/create_lookup_t
 - `ARCTAN_TABLE_SIZE` defines the size of the arctan lookup table.
 - `SCALE_FACTOR` defines the scaling to apply to the float values for fixed-point notation.
 - `VALUES` defines the number of values between 0 and the size of the lookup table.
-<!-- - `PRECISION` defines the decimal precision of the values. Maximum is 13 bits of info so  -->
 
 ## Execution
 
 To run the script run using python and specify one of `sin`, `cos`, or `arctan`.
 
 ```bash
-python create_lookup_table.py tan
+python create_lookup_table.py arctan
 ```
 
 You can also pipe it into the file of your choice
 
 ```bash
-python create_lookup_table.py tan >> config.h
+python create_lookup_table.py arctan >> config.h
 ```

@@ -56,16 +56,16 @@ def main():
             usage()
             exit(1)
 
-            # Create c code lookup definition
     switcher = {
         "sin": create_arcsin_lookup_table,
         "cos": create_arccos_lookup_table,
         "tan": create_arctan_lookup_table,
     }
-    output_lookup_table = switcher.get(sys.argv[1], np.arctan)
+    output_lookup_table = switcher.get(trig_function, np.arctan)
 
-    print("static const __flash uint32_t arctan_lookup[%d] = "
-          % LOOKUP_TABLE_SIZE)
+    # Create c code lookup definition
+    print("static const __flash uint32_t arc%s_lookup[%d] = "
+          % (trig_function, LOOKUP_TABLE_SIZE))
     print("{")
     output_lookup_table()
     print("};")

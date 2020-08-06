@@ -78,12 +78,11 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
     }
 
     /**
-             * Create temporary matricies for claculations.
-             */
-    fixed_point_u_t u_prime[4][4];
-    fixed_point_v_t v_trans_prime[4][4];
-    fixed_point_m_tmp_t m_prime_tmp[4][4];
-    fixed_point_m_t m_prime[4][4];
+     * Create temporary matricies for claculations.
+     */
+    fixed_point_u_t u_prime_1[4][4], u_prime_2[4][4];
+    fixed_point_v_t v_trans_prime_1[4][4], v_trans_prime_2[4][4];
+    fixed_point_m_t m_prime_1[4][4], m_trans_prime_2[4][4];
 
     for (int i = 0; i < 3; i++)
     {
@@ -156,11 +155,13 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             v_ij_trans[i][j] = convert_to_fixed(sin_theta_r, SCALE_FACTOR_V);
             v_ij_trans[j][i] = convert_to_fixed(-sin_theta_r, SCALE_FACTOR_V);
 
+            fixed_point_m_tmp_t m_prime_tmp[4][4];
+
             // Do the calculations
-            mat_mul_u_x_u(4, u_fixed, u_ij_trans, u_prime);             // [U][U_ij_T] = [U']
-            mat_mul_u_x_m(4, u_ij, m_fixed, m_prime_tmp);               // [U_ij][M] = [M'_tmp]
-            mat_mul_m_x_v(4, m_prime_tmp, v_ij_trans, m_prime);         // [M_tmp][V_ij_T] = [M']
-            mat_mul_v_x_v(4, v_ij_trans, v_trans_fixed, v_trans_prime); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
+            mat_mul_u_x_u(4, u_fixed, u_ij_trans, u_prime_1);             // [U][U_ij_T] = [U']
+            mat_mul_u_x_m(4, u_ij, m_fixed, m_prime_tmp);                 // [U_ij][M] = [M'_tmp]
+            mat_mul_m_x_v(4, m_prime_tmp, v_ij_trans, m_prime_1);         // [M_tmp][V_ij_T] = [M']
+            mat_mul_v_x_v(4, v_ij_trans, v_trans_fixed, v_trans_prime_1); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
 
             /**
              * Copy the values into U, V, and M
@@ -171,9 +172,9 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             {
                 for (int col = 0; col < 4; col++)
                 {
-                    u_fixed[row][col] = u_prime[row][col];
-                    v_trans_fixed[row][col] = v_trans_prime[row][col];
-                    m_fixed[row][col] = m_prime[row][col];
+                    u_fixed[row][col] = u_prime_1[row][col];
+                    v_trans_fixed[row][col] = v_trans_prime_1[row][col];
+                    m_fixed[row][col] = m_prime_1[row][col];
                 }
             }
         }

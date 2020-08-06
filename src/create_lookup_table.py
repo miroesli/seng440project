@@ -11,18 +11,42 @@ import numpy as np
 
 # Size of the lookup table -> Integer bit size 13, 14th bit is used for sign in C code
 MAX_INPUT = 1 << 13
-# Precision of lookup table
+# Range of lookup table
 LOOKUP_TABLE_SIZE = 4096  # MAX_INPUT
 # scale factor between float and fixed point integer
 SCALE_FACTOR = 1 << 30
+# Precision of the lookup tables
+PRECISION = 5
+
+# TODO add precision to tan (between integers) and cos and sin (how many decimal places of the range 0-1)
+
+"""Create lookup table for arcsin
+
+Input range for the lookup table will be between 0 and 1
+"""
 
 
 def create_arcsin_lookup_table():
     pass
 
 
+"""Create lookup table for arccos
+
+Input range for the lookup table will be between 0 and 1
+"""
+
+
 def create_arccos_lookup_table():
     pass
+
+
+"""Create lookup table for arctan
+
+Input range is predefined based on precision desired.
+Maximum range is between 0 and integer size.
+"""
+
+# Consider creating and approximator instead for tan, but for cos and sin just use lookup table.
 
 
 def create_arctan_lookup_table():
@@ -41,9 +65,15 @@ def create_arctan_lookup_table():
             print(" ", end="")
 
 
+"""Print the correct usage of the script."""
+
+
 def usage():
     print("Please provide the trig function you'd like to create a lookup table for.")
     print("eg: python create_lookup_table.py [sin|cos|tan]")
+
+
+"""Main function to evaluate which lookup table to create"""
 
 
 def main():

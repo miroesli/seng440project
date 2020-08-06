@@ -77,6 +77,14 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
         }
     }
 
+    /**
+             * Create temporary matricies for claculations.
+             */
+    fixed_point_u_t u_prime[4][4];
+    fixed_point_v_t v_trans_prime[4][4];
+    fixed_point_m_tmp_t m_prime_tmp[4][4];
+    fixed_point_m_t m_prime[4][4];
+
     for (int i = 0; i < 3; i++)
     {
         for (int j = i + 1; j < 4; j++)
@@ -147,14 +155,6 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             v_ij_trans[j][j] = convert_to_fixed(cos_theta_r, SCALE_FACTOR_V);
             v_ij_trans[i][j] = convert_to_fixed(sin_theta_r, SCALE_FACTOR_V);
             v_ij_trans[j][i] = convert_to_fixed(-sin_theta_r, SCALE_FACTOR_V);
-
-            /**
-             * Create temporary matricies for claculations.
-             */
-            fixed_point_u_t u_prime[4][4];
-            fixed_point_v_t v_trans_prime[4][4];
-            fixed_point_m_tmp_t m_prime_tmp[4][4];
-            fixed_point_m_t m_prime[4][4];
 
             // Do the calculations
             mat_mul_u_x_u(4, u_fixed, u_ij_trans, u_prime);             // [U][U_ij_T] = [U']

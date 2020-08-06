@@ -5,6 +5,7 @@
  */
 #include "svd.h"
 #include "svd_math.h"
+#include "config.h"
 
 /**
  * @brief Perfoms a fixed point matrix multiplication
@@ -61,28 +62,25 @@ void mat_mul_v_x_v(
  */
 void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t v_trans[4][4])
 {
-
-    fixed_point_m_t m_fixed[4][4];
-    fixed_point_u_t u_fixed[4][4];
-    fixed_point_v_t v_trans_fixed[4][4];
+    /**
+     * Create temporary matricies for claculations.
+     */
+    fixed_point_u_t u_prime_1[4][4], u_prime_2[4][4];
+    fixed_point_v_t v_trans_prime_1[4][4], v_trans_prime_2[4][4];
+    fixed_point_m_t m_prime_1[4][4], m_prime_2[4][4];
 
     // Convert the input matricies to fixed point.
     for (int row = 0; row < 4; row++)
     {
         for (int col = 0; col < 4; col++)
         {
-            m_fixed[row][col] = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
-            u_fixed[row][col] = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
-            v_trans_fixed[row][col] = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
+            m_prime_1[row][col] = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
+            u_prime_1[row][col] = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
+            v_trans_prime_1[row][col] = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
         }
     }
 
-    /**
-     * Create temporary matricies for claculations.
-     */
-    fixed_point_u_t u_prime_1[4][4], u_prime_2[4][4];
-    fixed_point_v_t v_trans_prime_1[4][4], v_trans_prime_2[4][4];
-    fixed_point_m_t m_prime_1[4][4], m_trans_prime_2[4][4];
+    int count = 0;
 
     for (int i = 0; i < 3; i++)
     {
@@ -94,8 +92,18 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
              * 
              * TODO: Implement all of these functions.
              */
-            floating_point_t theta_sum = atan((m_fixed[j][i] + m_fixed[i][j]) / (floating_point_t)(m_fixed[j][j] - m_fixed[i][i]));
-            floating_point_t theta_diff = atan((m_fixed[j][i] - m_fixed[i][j]) / (floating_point_t)(m_fixed[j][j] + m_fixed[i][i]));
+            floating_point_t theta_sum, theta_diff;
+            if (count % 2 == 0)
+            {
+                theta_sum = atan((m_prime_1[j][i] + m_prime_1[i][j]) / (floating_point_t)(m_prime_1[j][j] - m_prime_1[i][i]));
+                theta_diff = atan((m_prime_1[j][i] - m_prime_1[i][j]) / (floating_point_t)(m_prime_1[j][j] + m_prime_1[i][i]));
+            }
+            else
+            {
+                theta_sum = atan((m_prime_2[j][i] + m_prime_2[i][j]) / (floating_point_t)(m_prime_2[j][j] - m_prime_2[i][i]));
+                theta_diff = atan((m_prime_2[j][i] - m_prime_2[i][j]) / (floating_point_t)(m_prime_2[j][j] + m_prime_2[i][i]));
+            }
+
             floating_point_t theta_l = (theta_sum - theta_diff) / 2;
             floating_point_t theta_r = theta_sum - theta_l;
             floating_point_t sin_theta_l = sin(theta_l);
@@ -157,25 +165,19 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
 
             fixed_point_m_tmp_t m_prime_tmp[4][4];
 
-            // Do the calculations
-            mat_mul_u_x_u(4, u_fixed, u_ij_trans, u_prime_1);             // [U][U_ij_T] = [U']
-            mat_mul_u_x_m(4, u_ij, m_fixed, m_prime_tmp);                 // [U_ij][M] = [M'_tmp]
-            mat_mul_m_x_v(4, m_prime_tmp, v_ij_trans, m_prime_1);         // [M_tmp][V_ij_T] = [M']
-            mat_mul_v_x_v(4, v_ij_trans, v_trans_fixed, v_trans_prime_1); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
-
-            /**
-             * Copy the values into U, V, and M
-             * I think there we can avoid doing this for every ij pair, but for now this works.
-             * it involves having output matricies and switching between them every iteration.
-             */
-            for (int row = 0; row < 4; row++)
+            if (count++ % 2 == 0)
+            {                                                                   // Do the calculations
+                mat_mul_u_x_u(4, u_prime_1, u_ij_trans, u_prime_2);             // [U][U_ij_T] = [U']
+                mat_mul_u_x_m(4, u_ij, m_prime_1, m_prime_tmp);                 // [U_ij][M] = [M'_tmp]
+                mat_mul_m_x_v(4, m_prime_tmp, v_ij_trans, m_prime_2);           // [M_tmp][V_ij_T] = [M']
+                mat_mul_v_x_v(4, v_ij_trans, v_trans_prime_1, v_trans_prime_2); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
+            }
+            else
             {
-                for (int col = 0; col < 4; col++)
-                {
-                    u_fixed[row][col] = u_prime_1[row][col];
-                    v_trans_fixed[row][col] = v_trans_prime_1[row][col];
-                    m_fixed[row][col] = m_prime_1[row][col];
-                }
+                mat_mul_u_x_u(4, u_prime_2, u_ij_trans, u_prime_1);             // [U][U_ij_T] = [U']
+                mat_mul_u_x_m(4, u_ij, m_prime_2, m_prime_tmp);                 // [U_ij][M] = [M'_tmp]
+                mat_mul_m_x_v(4, m_prime_tmp, v_ij_trans, m_prime_1);           // [M_tmp][V_ij_T] = [M']
+                mat_mul_v_x_v(4, v_ij_trans, v_trans_prime_2, v_trans_prime_1); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
             }
         }
     }
@@ -184,9 +186,9 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
     {
         for (int col = 0; col < 4; col++)
         {
-            u[row][col] = convert_to_floating(u_fixed[row][col], SCALE_FACTOR_U);
-            v_trans[row][col] = convert_to_floating(v_trans_fixed[row][col], SCALE_FACTOR_V);
-            m[row][col] = convert_to_floating(m_fixed[row][col], SCALE_FACTOR_M);
+            u[row][col] = convert_to_floating(u_prime_1[row][col], SCALE_FACTOR_U);
+            v_trans[row][col] = convert_to_floating(v_trans_prime_1[row][col], SCALE_FACTOR_V);
+            m[row][col] = convert_to_floating(m_prime_1[row][col], SCALE_FACTOR_M);
         }
     }
 }

@@ -9,20 +9,25 @@ Based on trig function supplied run accordingly
 import sys
 import numpy as np
 
-# Size of the lookup table -> Integer bit size 13, 14th bit is used for sign in C code
-MAX_INPUT = 1 << 13
 # Range of arctan lookup table
-ARCTAN_TABLE_SIZE = 4096  # MAX_INPUT
+ARCTAN_TABLE_RANGE = 30  # MAX_INPUT
+SINCOS_TABLE_RANGE = 2 * np.pi
+# the resolution of the table
+VALUES = 300
 # scale factor between float and fixed point integer
-SCALE_FACTOR = 1 << 30
-# Precision of the lookup tables
-PRECISION = 3
+SCALE_FACTOR = 1 << 31
 
 # TODO Consider creating and approximator instead for tan,
-# but for cos and sin just use lookup table. Also add precision
-# to tan (between integers).
+# but for cos and sin just use lookup table.
 
 """Create lookup table
+arctan - call lookup with value [0, MAX_VALUE]
+(requries updating sign after result)
+
+must multiply by values and divide by range to scale for table
+
+---
+
 input range of arccos is [-1,1] but add 1 to scale to [0,2]
 when accessing lookup table. Input range for the lookup table
 will be between 0 and 2 scaled to an integer based on precision
@@ -35,15 +40,17 @@ to be an integer.
 """
 
 
-def create_lookup_table(value_function, size):
-    for index in range(size):
-        val = value_function(index)
+def create_lookup_table(value_function, range, values):
+    for index, x in enumerate(np.arange(0, range, range/values)):
+        # print(x, index)
+        y = value_function(x)
         # print the value
-        print("%d" % (val), end="")
+        # print("%010d" % (y), end="")
+        print('{:= 11d}'.format((int(y))), end="")
         if (index + 1) % 10 == 0:
-            print("")
+            print(",")
         else:
-            print(" ", end="")
+            print(", ", end="")
 
 
 """Print the correct usage of the script."""
@@ -63,28 +70,28 @@ def main():
         exit(1)
     else:
         trig_function = sys.argv[1]
-        if trig_function not in ["sin", "cos", "tan"]:
+        if trig_function not in ["sin", "cos", "arctan"]:
             usage()
             exit(1)
 
     value_func_switcher = {
-        "sin": lambda value: np.arcsin((value / pow(10, PRECISION))-1)
-        * SCALE_FACTOR,
-        "cos": lambda value: np.arccos((value / pow(10, PRECISION))-1)
-        * SCALE_FACTOR,
-        "tan": lambda value: np.arctan(value)
-        * SCALE_FACTOR,
+        # * SCALE_FACTOR
+        "arctan": lambda y: np.arctan(y) * SCALE_FACTOR,
+        "sin": lambda y: np.sin(y) * SCALE_FACTOR,
+        "cos": lambda y: np.cos(y) * SCALE_FACTOR
     }
     value_function = value_func_switcher.get(trig_function)
 
-    lookup_table_size = ARCTAN_TABLE_SIZE if trig_function == "tan" \
-        else pow(10, PRECISION)*2
+    if trig_function == "arctan":
+        range = ARCTAN_TABLE_RANGE
+    else:
+        range = SINCOS_TABLE_RANGE
 
     # Create c code lookup definition
-    print("static const __flash uint32_t arc%s_lookup[%d] = "
-          % (trig_function, lookup_table_size))
+    print("static const fixed_point_t %s_lookup[%d] = "
+          % (trig_function, VALUES))
     print("{")
-    create_lookup_table(value_function, lookup_table_size)
+    create_lookup_table(value_function, range, VALUES)
     print("};")
 
 

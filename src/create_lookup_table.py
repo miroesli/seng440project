@@ -33,7 +33,7 @@ stored in a c header file.
 
 
 def create_lookup_table(value_function, range, values):
-    for index, x in enumerate(np.arange(0, range, range/values)):
+    for index, x in enumerate(np.arange(0, range+range/values, range/values)):
         y = value_function(x)
         print('{:= 11d}'.format((int(y))), end="")
         if (index + 1) % 10 == 0:

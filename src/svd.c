@@ -7,6 +7,11 @@
 #include "svd_math.h"
 #include "config.h"
 
+fixed_point_t *access(fixed_point_t *arr, size_t size, size_t row, size_t col)
+{
+    return arr + size * row + col;
+}
+
 /**
  * @brief Perfoms a fixed point matrix multiplication
  * 
@@ -17,16 +22,19 @@
  * @param RHS 
  * @param out 
  */
-void mat_mul(int size, fixed_point_t LHS[size][size], fixed_point_t RHS[size][size], fixed_point_t out[size][size])
+void mat_mul(int size, fixed_point_t *LHS, fixed_point_t *RHS, fixed_point_t *out)
 {
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size; j++)
         {
-            out[i][j] = 0;
+            *access(out, size, i, j) = 0;
             for (int k = 0; k < size; k++)
             {
-                out[i][j] += truncate(fixed_point_mul(LHS[i][k], RHS[k][j]));
+                *access(out, size, i, j) += truncate(
+                    fixed_point_mul(
+                        *access(LHS, size, i, k),
+                        *access(RHS, size, k, j)));
             }
         }
     }
@@ -34,27 +42,27 @@ void mat_mul(int size, fixed_point_t LHS[size][size], fixed_point_t RHS[size][si
 
 void mat_mul_u_x_u(
     int size,
-    fixed_point_u_t LHS[size][size],
-    fixed_point_u_t RHS[size][size],
-    fixed_point_u_t out[size][size]) __attribute__((alias("mat_mul")));
+    fixed_point_u_t *LHS,
+    fixed_point_u_t *RHS,
+    fixed_point_u_t *out) __attribute__((alias("mat_mul")));
 
 void mat_mul_u_x_m(
     int size,
-    fixed_point_u_t LHS[size][size],
-    fixed_point_m_t RHS[size][size],
-    fixed_point_m_tmp_t out[size][size]) __attribute__((alias("mat_mul")));
+    fixed_point_u_t *LHS,
+    fixed_point_m_t *RHS,
+    fixed_point_m_tmp_t *out) __attribute__((alias("mat_mul")));
 
 void mat_mul_m_x_v(
     int size,
-    fixed_point_m_tmp_t LHS[size][size],
-    fixed_point_v_t RHS[size][size],
-    fixed_point_m_t out[size][size]) __attribute__((alias("mat_mul")));
+    fixed_point_m_tmp_t *LHS,
+    fixed_point_v_t *RHS,
+    fixed_point_m_t *out) __attribute__((alias("mat_mul")));
 
 void mat_mul_v_x_v(
     int size,
-    fixed_point_v_t LHS[size][size],
-    fixed_point_v_t RHS[size][size],
-    fixed_point_v_t out[size][size]) __attribute__((alias("mat_mul")));
+    fixed_point_v_t *LHS,
+    fixed_point_v_t *RHS,
+    fixed_point_v_t *out) __attribute__((alias("mat_mul")));
 
 /**
  * @brief Performes a single sweep of the svd algorithm

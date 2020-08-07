@@ -7,7 +7,7 @@
 #include "svd_math.h"
 #include "config.h"
 
-fixed_point_t *access(fixed_point_t *arr, size_t size, size_t row, size_t col)
+static inline fixed_point_t *access(fixed_point_t *arr, size_t size, size_t row, size_t col)
 {
     return arr + size * row + col;
 }

@@ -34,16 +34,16 @@ floating_point_t v_trans[4][4] = {
  * 
  * @param mat 
  */
-void mat_print(floating_point_t mat[4][4])
+void mat_print(size_t size, floating_point_t mat[size][size])
 {
-    for (int row = 0; row < 4; row++)
+    for (int row = 0; row < size; row++)
     {
         printf("[ ");
-        for (int col = 0; col < 3; col++)
+        for (int col = 0; col < size - 1; col++)
         {
             printf("%f, ", mat[row][col]);
         }
-        printf("%f ]\n", mat[row][3]);
+        printf("%f ]\n", mat[row][size - 1]);
     }
 }
 
@@ -52,8 +52,8 @@ int main(void)
 
     for (int i = 0; i < 4; i++)
     {
-        sweep(m, u, v_trans);
-        mat_print(m);
+        sweep(4, m, u, v_trans);
+        mat_print(4, m);
         printf("\n");
     }
 }

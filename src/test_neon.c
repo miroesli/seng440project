@@ -47,7 +47,7 @@ int main(void)
 
     Y_row = vld1q_s32((const fixed_point_t *)&Y[0][0]);
 
-    out_neon = vmulq_s32(Y_row, X_row);
+    out_neon = vmulq_n_s32(Y_row, X[0][0]);
 
     vst1q_s32((fixed_point_t *)&OUT[0][0], out_neon);
 

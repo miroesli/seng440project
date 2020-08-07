@@ -6,6 +6,10 @@ A table for sin, cos or arctan is generated based on selection.
 import sys
 import numpy as np
 
+# DEBUG
+DEBUG = False
+# Print to file
+WRITE_TO_FILE = True
 # Range of arctan lookup table
 ARCTAN_TABLE_RANGE = 10
 # Constant range
@@ -32,15 +36,21 @@ stored in a c header file.
 """
 
 
-def create_lookup_table(value_function, range, values):
+def create_lookup_table(f, value_function, range, values):
     for index, x in enumerate(np.arange(0, range, range/values)):
         y = value_function(x)
         # TODO values not being rounded correctly - this is fine for fixed point?
-        print('{:= 11d}'.format(int(y)), end="")
+        if DEBUG:
+            print('{:= 11d}'.format(int(y)), end="")
+        f.write('{:= 11d}'.format(int(y)))
         if (index + 1) % 10 == 0:
-            print(",")
+            if DEBUG:
+                print(",")
+            f.write(",\n")
         else:
-            print(", ", end="")
+            if DEBUG:
+                print(", ", end="")
+            f.write(", ")
 
 
 """Print the correct usage of the script."""
@@ -77,11 +87,51 @@ def main():
         range = SINCOS_TABLE_RANGE
 
     # Create c code lookup definition
-    print("static const fixed_point_t %s_lookup_table[%d] = "
-          % (trig_function, VALUES))
-    print("{")
-    create_lookup_table(value_function, range, VALUES)
-    print("};")
+
+    if WRITE_TO_FILE:
+        f = open("%s_lookup_table.h" % trig_function, "w")
+
+    if WRITE_TO_FILE:
+        header_content = \
+            """/*
+ *
+ * %s_lookup_table.h
+ *
+ */
+
+#ifndef %s_lookup_table_h
+#define %s_lookup_table_h
+
+#include "svd_math.h"
+
+"""
+    if DEBUG:
+        print(header_content % (trig_function, trig_function, trig_function))
+    if WRITE_TO_FILE:
+        f.write(header_content % (trig_function, trig_function, trig_function))
+    if DEBUG:
+        print("static const fixed_point_t %s_lookup_table[%d] = "
+              % (trig_function, VALUES))
+    if WRITE_TO_FILE:
+        f.write("static const fixed_point_t %s_lookup_table[%d] = \n"
+                % (trig_function, VALUES))
+    if DEBUG:
+        print("{")
+    if WRITE_TO_FILE:
+        f.write("{\n")
+
+    # write the numbers
+    create_lookup_table(f, value_function, range, VALUES)
+
+    if DEBUG:
+        print("}; \n\n#endif")
+    if WRITE_TO_FILE:
+        f.write("}; \n\n#endif")
+
+    if WRITE_TO_FILE:
+        print("Wrote lookup table to %s_lookup_table.h" % trig_function)
+    if WRITE_TO_FILE:
+        f.close()
 
 
 if __name__ == "__main__":

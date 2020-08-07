@@ -4,12 +4,11 @@
  *
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef tables_h
+#define tables_h
 
 #include "svd_math.h"
 
-/* Tables */
 static const fixed_point_t sin_lookup_table[301] = 
 {
           0,    44973504,    89927281,   134841613,   179696800,   224473165,   269151069,   313710915,   358133156,   402398309,

@@ -97,9 +97,9 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
     {
         for (int col = 0; col < 4; col++)
         {
-            m_prime_1[row][col] = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
-            u_prime_1[row][col] = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
-            v_trans_prime_1[row][col] = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
+            *access(m_mats[input], 4, row, col) = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
+            *access(u_mats[input], 4, row, col) = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
+            *access(v_mats[input], 4, row, col) = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
         }
     }
 

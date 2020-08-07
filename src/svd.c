@@ -67,7 +67,7 @@ void mat_mul_v_x_v(
 
 /**
  * @brief Performes a single sweep of the svd algorithm
- * 
+ *
  */
 void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u[size][size], floating_point_t v_trans[size][size])
 {
@@ -114,11 +114,16 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
 
             /**
              * Do all of the angle calculations
-             * 
+             *
              * TODO: Implement all of these functions.
              */
-            floating_point_t theta_sum = atan((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i)));
+            floating_point_t theta_sum = arctan_lookup((floating_point_t)(((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i))) * VALUES_IN_RANGE / ARCTAN_RANGE));
+            floating_point_t theta_diff_new = arctan_lookup((floating_point_t)(((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) + *access(m_mats[input], size, i, i))) * VALUES_IN_RANGE / ARCTAN_RANGE));
+
+            floating_point_t theta_sum_old = atan((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i)));
+            printf("%f, %f\n", theta_sum, theta_sum_old);
             floating_point_t theta_diff = atan((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) + *access(m_mats[input], size, i, i)));
+            // printf("%f, %f\n", theta_diff_new, theta_diff);
             floating_point_t theta_l = (theta_sum - theta_diff) / 2;
             floating_point_t theta_r = theta_sum - theta_l;
             floating_point_t sin_theta_l = sin(theta_l);

@@ -2,16 +2,30 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "arm_neon.h"
+#include "svd_math.h"
 
-#define N 16
-#define M 32
+#define N 4
+#define M 4
 
-volatile int16_t A[N][M], B[N][M], SUM[N][M];
+volatile fixed_point_t A[N][M], B[N][M], SUM[N][M];
+
+void print_matrix(fixed_point_t m[N][M])
+{
+    for (int i = 0; i < N; i++)
+    {
+        printf("[");
+        for (int j = 0; j < M - 1; j++)
+        {
+            printf(" %d", m[i][j]);
+        }
+        printf(" ]\n");
+    }
+}
 
 int main(void)
 {
     int i, j;
-    int16x4_t A_neon, B_neon, SUM_neon;
+    fixed_point_t A_neon, B_neon, SUM_neon;
 
     for (i = 0; i < N; i++)
         for (j = 0; j < M; j++)
@@ -20,29 +34,19 @@ int main(void)
             B[i][j] = 15 * j;
         }
 
-    for (i = 0; i < 4; i++)
-        for (j = 0; j < 2; j++)
-            printf("A[%i][%i] = %i\n", i, j, A[i][j]);
-    printf("\n");
-
-    for (i = 0; i < 4; i++)
-        for (j = 0; j < 2; j++)
-            printf("B[%i][%i] = %i\n", i, j, B[i][j]);
-    printf("\n");
+    print_matrix(A);
+    print_matrix(B);
 
     for (i = 0; i < N; i += 4)
         for (j = 0; j < M; j++)
         {
-            A_neon = vld1_s16((const int16_t *)&A[i][j]);
-            B_neon = vld1_s16((const int16_t *)&B[i][j]);
-            SUM_neon = vadd_s16(A_neon, B_neon);
-            vst1_s16((int16_t *)&SUM[i][j], SUM_neon);
+            A_neon = vld1_s32((const fixed_point_t *)&A[i][j]);
+            B_neon = vld1_s32((const fixed_point_t *)&B[i][j]);
+            SUM_neon = vadd_s32(A_neon, B_neon);
+            vst1_s32((fixed_point_t *)&SUM[i][j], SUM_neon);
         }
 
-    for (i = 0; i < 4; i++)
-        for (j = 0; j < 2; j++)
-            printf("SUM[%i][%i] = %i\n", i, j, SUM[i][j]);
-    printf("\n");
+    print_matrix(SUM);
 
     exit(0);
 }

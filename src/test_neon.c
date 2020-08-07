@@ -40,14 +40,20 @@ volatile fixed_point_t OUT[N][M];
 int main(void)
 {
     int i, j;
-    int32x4_t X_val, Y_row, out_neon;
+    int32x4_t Y_row_0, Y_row_1, Y_row_2, Y_row_3, out_neon;
 
     print_matrix((const fixed_point_t *)&X[0][0]);
     print_matrix((const fixed_point_t *)&Y[0][0]);
 
-    Y_row = vld1q_s32((const fixed_point_t *)&Y[0][0]);
+    Y_row_0 = vld1q_s32((const fixed_point_t *)&Y[0][0]);
+    Y_row_1 = vld1q_s32((const fixed_point_t *)&Y[1][0]);
+    Y_row_2 = vld1q_s32((const fixed_point_t *)&Y[2][0]);
+    Y_row_3 = vld1q_s32((const fixed_point_t *)&Y[3][0]);
 
-    out_neon = vmulq_n_s32(Y_row, X[0][0]);
+    out_neon = vmulq_n_s32(Y_row_0, X[0][0]);
+    out_neon = vaddq_s32(vmulq_n_s32(Y_row_1, X[0][1]), out_neon);
+    out_neon = vaddq_s32(vmulq_n_s32(Y_row_2, X[0][2]), out_neon);
+    out_neon = vaddq_s32(vmulq_n_s32(Y_row_3, X[0][3]), out_neon);
 
     vst1q_s32((fixed_point_t *)&OUT[0][0], out_neon);
 

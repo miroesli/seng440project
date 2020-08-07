@@ -25,7 +25,7 @@ void print_matrix(const fixed_point_t *m)
 int main(void)
 {
     int i, j;
-    int_32x2_t A_neon, B_neon, SUM_neon;
+    int32x2_t A_neon, B_neon, SUM_neon;
 
     for (i = 0; i < N; i++)
         for (j = 0; j < M; j++)
@@ -35,7 +35,7 @@ int main(void)
         }
 
     print_matrix((const fixed_point_t *)&A[0][0]);
-    print_matrix((const fixed_point_t *)&V[0][0]);
+    print_matrix((const fixed_point_t *)&B[0][0]);
 
     for (i = 0; i < N; i += 4)
         for (j = 0; j < M; j++)

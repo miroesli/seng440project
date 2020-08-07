@@ -4,9 +4,6 @@
  *
  */
 #include "svd.h"
-#include "svd_math.h"
-#include "memory.h"
-#include "config.h"
 
 static inline fixed_point_t *access(fixed_point_t *arr, size_t size, size_t row, size_t col)
 {
@@ -117,13 +114,17 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
              *
              * TODO: Implement all of these functions.
              */
-            floating_point_t theta_sum = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i))));
-            floating_point_t theta_diff_new = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) + *access(m_mats[input], size, i, i))));
 
-            floating_point_t theta_sum_old = atan((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i)));
-            printf("%f, %f\n", theta_sum, theta_sum_old);
-            floating_point_t theta_diff = atan((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) + *access(m_mats[input], size, i, i)));
-            // printf("%f, %f\n", theta_diff_new, theta_diff);
+             // floating_point_t theta_sum_old = atan((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i)));
+             // printf("%f, %f\n", theta_sum, theta_sum_old);
+             // floating_point_t theta_diff_old = atan((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j)) / (floating_point_t)(*access(m_mats[input], size, j, j) + *access(m_mats[input], size, i, i)));
+             // printf("%f, %f\n", theta_diff_new, theta_diff);
+
+
+            floating_point_t theta_sum = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j))
+                / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i))));
+            floating_point_t theta_diff = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j))
+                / (floating_point_t)(*access(m_mats[input], size, j, j) + *access(m_mats[input], size, i, i))));
             floating_point_t theta_l = (theta_sum - theta_diff) / 2;
             floating_point_t theta_r = theta_sum - theta_l;
             floating_point_t sin_theta_l = sin(theta_l);

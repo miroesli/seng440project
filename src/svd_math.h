@@ -18,8 +18,10 @@ typedef fixed_point_double_t fixed_point_v_dp_t;
 typedef fixed_point_double_t fixed_point_m_dp_t;
 typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 
+#include "config.h"
+#include "tables.h"
+
 // TODO check if factor u can be used instead?
-#define SCALE_FACTOR_ARCTAN 31
 #define SCALE_FACTOR_U 31
 #define SCALE_FACTOR_U_DP 2 * SCALE_FACTOR_U + 1
 #define SCALE_FACTOR_V 31
@@ -29,6 +31,7 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 #define SCALE_FACTOR_M_tmp SCALE_FACTOR_M_tmp_DP - (sizeof(fixed_point_double_t) - sizeof(fixed_point_t)) * 8
 #define SCALE_FACTOR_M_DP SCALE_FACTOR_M_tmp + SCALE_FACTOR_V + 1
 // exclusive end
+#define SCALE_FACTOR_ARCTAN 30
 #define ARCTAN_RANGE 10 
 #define VALUES_IN_RANGE 10000
 #define SINCOS_RANGE M_PI * 2

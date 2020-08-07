@@ -7,13 +7,13 @@ import sys
 import numpy as np
 
 # Range of arctan lookup table
-ARCTAN_TABLE_RANGE = 30
+ARCTAN_TABLE_RANGE = 10
 # Constant range
 SINCOS_TABLE_RANGE = 2 * np.pi
 # the resolution of the table
 VALUES = 10000
 # scale factor between float and fixed point integer
-SCALE_FACTOR = 1 << 31
+SCALE_FACTOR = 1 << 30
 
 # TODO Consider creating and approximator instead for tan,
 # but for cos and sin just use lookup table.

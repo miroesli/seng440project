@@ -1,6 +1,4 @@
 #include "svd_math.h"
-#include "stdio.h"
-#include "tables.h"
 
 /**
  * @brief Convert a floating_point_t to a fixed_point_t with a given scale factor
@@ -79,7 +77,15 @@ floating_point_t arctan_lookup(floating_point_t frac)
     }
     // lookup value in lookup table
     theta = arctan_lookup_table_old[(uint32_t)(frac)];
-    return theta*neg;
+    fixed_point_t theta_fixed = arctan_lookup_table[(uint32_t)(frac)];
+    // theta3 = 
+
+    printf("\ntheta float: %f, theta fixed: %d\n", theta, theta_fixed);
+    fixed_point_t theta2 = convert_to_fixed(theta, SCALE_FACTOR_ARCTAN);
+    printf("theta fixed: %d\n", theta2);
+    floating_point_t theta3 = convert_to_floating(theta2, SCALE_FACTOR_ARCTAN);
+    printf("theta float: %f\n\n", theta3);
+    return theta3*neg;
     // return convert_to_floating(theta, SCALE_FACTOR_ARCTAN);
 }
 

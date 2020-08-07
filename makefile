@@ -9,4 +9,4 @@ svd_math:
 main: svd svd_math
 	gcc -o a.out src/main.c svd.o svd_math.o -lm
 test_c: svd svd_math
-	gcc -o test src/test.c svd.o svd_math.o -lm
+	gcc -o test.out src/test.c svd.o svd_math.o -lm

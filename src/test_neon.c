@@ -21,38 +21,38 @@ void print_matrix(const fixed_point_t *m)
     printf("\n");
 }
 
-volatile fixed_point_t A[N][M] = {
+volatile fixed_point_t X[N][M] = {
     {0x1, 0x2, 0x3, 0x4},
     {0x5, 0x6, 0x7, 0x8},
     {0x9, 0xA, 0xB, 0xC},
     {0xD, 0xE, 0xF, 0x0},
 };
 
-volatile fixed_point_t B[N][M] = {
+volatile fixed_point_t Y[N][M] = {
     {0x1, 0x2, 0x3, 0x4},
     {0x5, 0x6, 0x7, 0x8},
     {0x9, 0xA, 0xB, 0xC},
     {0xD, 0xE, 0xF, 0x0},
 };
+
+volatile fixed_point_t OUT[N][M];
 
 int main(void)
 {
     int i, j;
-    int32x2_t A_neon, B_neon, SUM_neon;
+    int32x4_t X_row, Y_row, out_neon;
 
-    print_matrix((const fixed_point_t *)&A[0][0]);
-    print_matrix((const fixed_point_t *)&B[0][0]);
+    print_matrix((const fixed_point_t *)&X[0][0]);
+    print_matrix((const fixed_point_t *)&Y[0][0]);
 
-    // for (i = 0; i < N; i += 4)
-    //     for (j = 0; j < M; j++)
-    //     {
-    //         A_neon = vld1_s32((const fixed_point_t *)&A[i][j]);
-    //         B_neon = vld1_s32((const fixed_point_t *)&B[i][j]);
-    //         SUM_neon = vadd_s32(A_neon, B_neon);
-    //         vst1_s32((fixed_point_t *)&SUM[i][j], SUM_neon);
-    //     }
+    X_row = vld1q_s32((const fixed_point_t *)&X[0][0]);
+    Y_row = vld1q_s32((const fixed_point_t *)&Y[0][0]);
 
-    // print_matrix((const fixed_point_t *)&SUM[0][0]);
+    out_neon = vmulq_s32(Y_row, X_row);
+
+    vst1q_s32((fixed_point_t *)&OUT[0][0], out_neon);
+
+    print_matrix((const fixed_point_t *)&OUT[0][0]);
 
     exit(0);
 }

@@ -72,6 +72,11 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
 {
     /**
      * Create temporary matricies for claculations.
+     * 
+     * Two matricies are used to avoid copying. One matrix is used for input, and the 
+     * other is used for output. Every iteration, the input and output matricies switch.
+     * 
+     * To avoid copying during the switch, just the pointers to the matricies are flipped.
      */
     fixed_point_u_t u_prime_1[4][4], u_prime_2[4][4];
     fixed_point_v_t v_trans_prime_1[4][4], v_trans_prime_2[4][4];
@@ -98,6 +103,9 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
         }
     }
 
+    /**
+     * Start of iterations
+     */
     for (int i = 0; i < 3; i++)
     {
         for (int j = i + 1; j < 4; j++)
@@ -118,8 +126,7 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
             floating_point_t cos_theta_r = cos(theta_r);
 
             /**
-             * @brief Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
-             * 
+             * Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
              */
             fixed_point_u_t u_ij[4][4] = {
                 {one_u, 0, 0, 0},
@@ -184,6 +191,7 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
         }
     }
 
+    // Convert the fixed point matricies back into floating point.
     for (int row = 0; row < 4; row++)
     {
         for (int col = 0; col < 4; col++)

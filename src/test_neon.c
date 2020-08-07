@@ -9,7 +9,7 @@
 
 volatile fixed_point_t A[N][M], B[N][M], SUM[N][M];
 
-void print_matrix(fixed_point_t *m)
+void print_matrix(const fixed_point_t *m)
 {
     for (int i = 0; i < N; i++)
     {
@@ -34,8 +34,8 @@ int main(void)
             B[i][j] = 15 * j;
         }
 
-    print_matrix(A);
-    print_matrix(B);
+    print_matrix((const fixed_point_t *)&A[0][0]);
+    print_matrix((const fixed_point_t *)&V[0][0]);
 
     for (i = 0; i < N; i += 4)
         for (j = 0; j < M; j++)
@@ -46,7 +46,7 @@ int main(void)
             vst1_s32((fixed_point_t *)&SUM[i][j], SUM_neon);
         }
 
-    print_matrix(SUM);
+    print_matrix((const fixed_point_t *)&SUM[0][0]);
 
     exit(0);
 }

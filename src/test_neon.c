@@ -50,10 +50,13 @@ int main(void)
     Y_row_2 = vld1q_s32((const fixed_point_t *)&Y[2][0]);
     Y_row_3 = vld1q_s32((const fixed_point_t *)&Y[3][0]);
 
-    out_neon = vmulq_n_s32(Y_row_0, X[0][0]);
-    out_neon = vaddq_s32(vmulq_n_s32(Y_row_1, X[0][1]), out_neon);
-    out_neon = vaddq_s32(vmulq_n_s32(Y_row_2, X[0][2]), out_neon);
-    out_neon = vaddq_s32(vmulq_n_s32(Y_row_3, X[0][3]), out_neon);
+    for (int i = 0; i < N; i++)
+    {
+        out_neon = vmulq_n_s32(Y_row_0, X[i][0]);
+        out_neon = vaddq_s32(vmulq_n_s32(Y_row_1, X[i][1]), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(Y_row_2, X[i][2]), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(Y_row_3, X[i][3]), out_neon);
+    }
 
     vst1q_s32((fixed_point_t *)&OUT[0][0], out_neon);
 

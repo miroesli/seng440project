@@ -35,7 +35,7 @@ stored in a c header file.
 def create_lookup_table(value_function, range, values):
     for index, x in enumerate(np.arange(0, range+range/values, range/values)):
         y = value_function(x)
-        print('{:= 11d}'.format((int(y))), end="")
+        print('{:= 11d}'.format(int(y)), end="")
         if (index + 1) % 10 == 0:
             print(",")
         else:
@@ -77,8 +77,8 @@ def main():
         range = SINCOS_TABLE_RANGE
 
     # Create c code lookup definition
-    print("static const fixed_point_t %s_lookup[%d] = "
-          % (trig_function, VALUES))
+    print("static const fixed_point_t %s_lookup_table[%d] = "
+          % (trig_function, VALUES+1))
     print("{")
     create_lookup_table(value_function, range, VALUES)
     print("};")

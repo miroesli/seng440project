@@ -2,6 +2,7 @@
 #define svd_math_h
 #include <inttypes.h>
 #include <stddef.h>
+#include <math.h>
 
 typedef float floating_point_t;
 typedef int32_t fixed_point_t;
@@ -17,6 +18,8 @@ typedef fixed_point_double_t fixed_point_v_dp_t;
 typedef fixed_point_double_t fixed_point_m_dp_t;
 typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 
+// TODO check if factor u can be used instead?
+#define SCALE_FACTOR_ARCTAN 31
 #define SCALE_FACTOR_U 31
 #define SCALE_FACTOR_U_DP 2 * SCALE_FACTOR_U + 1
 #define SCALE_FACTOR_V 31
@@ -30,6 +33,7 @@ fixed_point_t convert_to_fixed(floating_point_t f, size_t scale_factor);
 fixed_point_double_t fixed_point_mul(fixed_point_t, fixed_point_t);
 fixed_point_t truncate(fixed_point_m_tmp_dp_t);
 floating_point_t convert_to_floating(fixed_point_double_t f, size_t scale_factor);
+floating_point_t arctan_lookup(floating_point_t frac);
 
 static const fixed_point_u_t one_u = (1 << SCALE_FACTOR_U);
 static const fixed_point_v_t one_v = (1 << SCALE_FACTOR_V);

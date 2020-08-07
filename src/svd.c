@@ -5,17 +5,18 @@
  */
 #include "svd.h"
 #include "svd_math.h"
+#include "config.h"
 
-/**
- * @brief Perfoms a fixed point matrix multiplication
- * 
- * Result is placed in out[][]
- * 
- * @param size 
- * @param LHS 
- * @param RHS 
- * @param out 
- */
+ /**
+  * @brief Perfoms a fixed point matrix multiplication
+  *
+  * Result is placed in out[][]
+  *
+  * @param size
+  * @param LHS
+  * @param RHS
+  * @param out
+  */
 void mat_mul(int size, fixed_point_t LHS[size][size], fixed_point_t RHS[size][size], fixed_point_double_t out[size][size])
 {
     for (int i = 0; i < size; i++)
@@ -57,7 +58,7 @@ void mat_mul_v_x_v(
 
 /**
  * @brief Performes a single sweep of the svd algorithm
- * 
+ *
  */
 void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t v_trans[4][4])
 {
@@ -84,11 +85,18 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
 
             /**
              * Do all of the angle calculations
-             * 
+             *
              * TODO: Implement all of these functions.
              */
-            floating_point_t theta_sum = atan((m_fixed[j][i] + m_fixed[i][j]) / (floating_point_t)(m_fixed[j][j] - m_fixed[i][i]));
+            floating_point_t theta_sum = arctan_lookup((floating_point_t)(((m_fixed[j][i] + m_fixed[i][j])
+                / (floating_point_t)(m_fixed[j][j] - m_fixed[i][i]))*VALUES_IN_RANGE/ARCTAN_RANGE));
+            floating_point_t theta_diff_new = arctan_lookup((floating_point_t)(((m_fixed[j][i] - m_fixed[i][j])
+                / (floating_point_t)(m_fixed[j][j] + m_fixed[i][i]))*VALUES_IN_RANGE/ARCTAN_RANGE));
+
+            floating_point_t theta_sum_old = atan((m_fixed[j][i] + m_fixed[i][j]) / (floating_point_t)(m_fixed[j][j] - m_fixed[i][i]));
+            printf("%f, %f\n", theta_sum, theta_sum_old);
             floating_point_t theta_diff = atan((m_fixed[j][i] - m_fixed[i][j]) / (floating_point_t)(m_fixed[j][j] + m_fixed[i][i]));
+            // printf("%f, %f\n", theta_diff_new, theta_diff);
             floating_point_t theta_l = (theta_sum - theta_diff) / 2;
             floating_point_t theta_r = theta_sum - theta_l;
             floating_point_t sin_theta_l = sin(theta_l);
@@ -98,27 +106,27 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
 
             /**
              * @brief Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
-             * 
+             *
              */
-            fixed_point_u_t u_ij[4][4] = {
-                {one_u, 0, 0, 0},
-                {0, one_u, 0, 0},
-                {0, 0, one_u, 0},
-                {0, 0, 0, one_u},
+            fixed_point_u_t u_ij[4][4] ={
+                { one_u, 0, 0, 0 },
+                { 0, one_u, 0, 0 },
+                { 0, 0, one_u, 0 },
+                { 0, 0, 0, one_u },
             };
 
-            fixed_point_u_t u_ij_trans[4][4] = {
-                {one_u, 0, 0, 0},
-                {0, one_u, 0, 0},
-                {0, 0, one_u, 0},
-                {0, 0, 0, one_u},
+            fixed_point_u_t u_ij_trans[4][4] ={
+                { one_u, 0, 0, 0 },
+                { 0, one_u, 0, 0 },
+                { 0, 0, one_u, 0 },
+                { 0, 0, 0, one_u },
             };
 
-            fixed_point_v_t v_ij_trans[4][4] = {
-                {one_v, 0, 0, 0},
-                {0, one_v, 0, 0},
-                {0, 0, one_v, 0},
-                {0, 0, 0, one_v},
+            fixed_point_v_t v_ij_trans[4][4] ={
+                { one_v, 0, 0, 0 },
+                { 0, one_v, 0, 0 },
+                { 0, 0, one_v, 0 },
+                { 0, 0, 0, one_v },
             };
 
             /**

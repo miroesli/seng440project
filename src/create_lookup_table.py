@@ -42,15 +42,18 @@ def create_lookup_table(f, value_function, range, values):
         # TODO values not being rounded correctly - this is fine for fixed point?
         if DEBUG:
             print('{:= 11d}'.format(int(y)), end="")
-        f.write('{:= 11d}'.format(int(y)))
+        if WRITE_TO_FILE:
+            f.write('{:= 11d}'.format(int(y)))
         if (index + 1) % 10 == 0:
             if DEBUG:
                 print(",")
-            f.write(",\n")
+            if WRITE_TO_FILE:
+                f.write(",\n")
         else:
             if DEBUG:
                 print(", ", end="")
-            f.write(", ")
+            if WRITE_TO_FILE:
+                f.write(", ")
 
 
 """Print the correct usage of the script."""
@@ -87,13 +90,12 @@ def main():
         range = SINCOS_TABLE_RANGE
 
     # Create c code lookup definition
-
+    f = None
     if WRITE_TO_FILE:
         f = open("%s_lookup_table.h" % trig_function, "w")
 
-    if WRITE_TO_FILE:
-        header_content = \
-            """/*
+    header_content = \
+        """/*
  *
  * %s_lookup_table.h
  *

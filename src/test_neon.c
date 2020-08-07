@@ -56,9 +56,8 @@ int main(void)
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_1, X[i][1]), out_neon);
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_2, X[i][2]), out_neon);
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_3, X[i][3]), out_neon);
+        vst1q_s32((fixed_point_t *)&OUT[i][0], out_neon);
     }
-
-    vst1q_s32((fixed_point_t *)&OUT[0][0], out_neon);
 
     print_matrix((const fixed_point_t *)&OUT[0][0]);
 

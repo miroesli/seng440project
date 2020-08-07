@@ -121,16 +121,20 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
              // printf("%f, %f\n", theta_diff_new, theta_diff);
 
 
-            floating_point_t theta_sum = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j))
+            fixed_point_t theta_sum = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j))
                 / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i))));
-            floating_point_t theta_diff = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j))
+            fixed_point_t theta_diff = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j))
                 / (floating_point_t)(*access(m_mats[input], size, j, j) + *access(m_mats[input], size, i, i))));
-            floating_point_t theta_l = (theta_sum - theta_diff) / 2;
-            floating_point_t theta_r = theta_sum - theta_l;
-            floating_point_t sin_theta_l = sin(theta_l);
-            floating_point_t cos_theta_l = cos(theta_l);
-            floating_point_t sin_theta_r = sin(theta_r);
-            floating_point_t cos_theta_r = cos(theta_r);
+            fixed_point_t theta_l = (theta_sum - theta_diff) >> 1;
+            fixed_point_t theta_r = theta_sum - theta_l;
+            fixed_point_t sin_theta_l_fixed = sin_lookup(theta_l);
+            fixed_point_t cos_theta_l_fixed = cos_lookup(theta_l);
+            fixed_point_t sin_theta_r_fixed = sin_lookup(theta_r);
+            fixed_point_t cos_theta_r_fixed = cos_lookup(theta_r);
+            // floating_point_t sin_theta_l = sin(theta_l);
+            // floating_point_t cos_theta_l = cos(theta_l);
+            // floating_point_t sin_theta_r = sin(theta_r);
+            // floating_point_t cos_theta_r = cos(theta_r);
 
             /**
              * Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
@@ -153,28 +157,55 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
              * U_ij = [ cos(θl) -sin(θl) ]
              *        [ sin(θl)  cos(θl) ]
              */
-            u_ij[i][i] = convert_to_fixed(cos_theta_l, SCALE_FACTOR_U);
-            u_ij[j][j] = convert_to_fixed(cos_theta_l, SCALE_FACTOR_U);
-            u_ij[i][j] = convert_to_fixed(-sin_theta_l, SCALE_FACTOR_U);
-            u_ij[j][i] = convert_to_fixed(sin_theta_l, SCALE_FACTOR_U);
+            u_ij[i][i] = cos_theta_l_fixed;
+            u_ij[j][j] = cos_theta_l_fixed;
+            u_ij[i][j] = -sin_theta_l_fixed;
+            u_ij[j][i] = sin_theta_l_fixed;
 
             /**
              * U_ij_Trans = [  cos(θl) sin(θl) ]
              *              [ -sin(θl) cos(θl) ]
              */
-            u_ij_trans[i][i] = convert_to_fixed(cos_theta_l, SCALE_FACTOR_U);
-            u_ij_trans[j][j] = convert_to_fixed(cos_theta_l, SCALE_FACTOR_U);
-            u_ij_trans[i][j] = convert_to_fixed(sin_theta_l, SCALE_FACTOR_U);
-            u_ij_trans[j][i] = convert_to_fixed(-sin_theta_l, SCALE_FACTOR_U);
+            u_ij_trans[i][i] = cos_theta_l_fixed;
+            u_ij_trans[j][j] = cos_theta_l_fixed;
+            u_ij_trans[i][j] = sin_theta_l_fixed;
+            u_ij_trans[j][i] = -sin_theta_l_fixed;
 
             /**
              * V_ij_Trans = [  cos(θr) sin(θr) ]
              *              [ -sin(θr) cos(θr) ]
              */
-            v_ij_trans[i][i] = convert_to_fixed(cos_theta_r, SCALE_FACTOR_V);
-            v_ij_trans[j][j] = convert_to_fixed(cos_theta_r, SCALE_FACTOR_V);
-            v_ij_trans[i][j] = convert_to_fixed(sin_theta_r, SCALE_FACTOR_V);
-            v_ij_trans[j][i] = convert_to_fixed(-sin_theta_r, SCALE_FACTOR_V);
+            v_ij_trans[i][i] = cos_theta_r_fixed;
+            v_ij_trans[j][j] = cos_theta_r_fixed;
+            v_ij_trans[i][j] = sin_theta_r_fixed;
+            v_ij_trans[j][i] = -sin_theta_r_fixed;
+
+            // /**
+            //  * U_ij = [ cos(θl) -sin(θl) ]
+            //  *        [ sin(θl)  cos(θl) ]
+            //  */
+            // u_ij[i][i] = convert_to_fixed(cos_theta_l, SCALE_FACTOR_U);
+            // u_ij[j][j] = convert_to_fixed(cos_theta_l, SCALE_FACTOR_U);
+            // u_ij[i][j] = convert_to_fixed(-sin_theta_l, SCALE_FACTOR_U);
+            // u_ij[j][i] = convert_to_fixed(sin_theta_l, SCALE_FACTOR_U);
+
+            // /**
+            //  * U_ij_Trans = [  cos(θl) sin(θl) ]
+            //  *              [ -sin(θl) cos(θl) ]
+            //  */
+            // u_ij_trans[i][i] = convert_to_fixed(cos_theta_l, SCALE_FACTOR_U);
+            // u_ij_trans[j][j] = convert_to_fixed(cos_theta_l, SCALE_FACTOR_U);
+            // u_ij_trans[i][j] = convert_to_fixed(sin_theta_l, SCALE_FACTOR_U);
+            // u_ij_trans[j][i] = convert_to_fixed(-sin_theta_l, SCALE_FACTOR_U);
+
+            // /**
+            //  * V_ij_Trans = [  cos(θr) sin(θr) ]
+            //  *              [ -sin(θr) cos(θr) ]
+            //  */
+            // v_ij_trans[i][i] = convert_to_fixed(cos_theta_r, SCALE_FACTOR_V);
+            // v_ij_trans[j][j] = convert_to_fixed(cos_theta_r, SCALE_FACTOR_V);
+            // v_ij_trans[i][j] = convert_to_fixed(sin_theta_r, SCALE_FACTOR_V);
+            // v_ij_trans[j][i] = convert_to_fixed(-sin_theta_r, SCALE_FACTOR_V);
 
             fixed_point_m_tmp_t m_prime_tmp[size][size];
 

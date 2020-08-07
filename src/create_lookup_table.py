@@ -11,7 +11,7 @@ ARCTAN_TABLE_RANGE = 30
 # Constant range
 SINCOS_TABLE_RANGE = 2 * np.pi
 # the resolution of the table
-VALUES = 300
+VALUES = 3000
 # scale factor between float and fixed point integer
 SCALE_FACTOR = 1 << 31
 
@@ -35,6 +35,7 @@ stored in a c header file.
 def create_lookup_table(value_function, range, values):
     for index, x in enumerate(np.arange(0, range+range/values, range/values)):
         y = value_function(x)
+        # TODO values not being rounded correctly
         print('{:= 11d}'.format(int(y)), end="")
         if (index + 1) % 10 == 0:
             print(",")

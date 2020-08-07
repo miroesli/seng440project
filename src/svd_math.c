@@ -66,15 +66,20 @@ floating_point_t convert_to_floating(fixed_point_double_t f, size_t scale_factor
 floating_point_t arctan_lookup(floating_point_t frac)
 {
     floating_point_t theta;
-    printf("FRAC: %f\n", frac);
+    floating_point_t neg = 1;
+    frac = frac * VALUES_IN_RANGE / ARCTAN_RANGE;
+    // printf("FRAC: %f\n", frac);
     if (frac < 0) {
-        theta = arctan_lookup_table_old[(uint32_t)(-frac)];
-        theta = -theta;
+        frac = -frac; //or abs(frac)?
+        neg = -1;
     }
-    else {
-        theta = arctan_lookup_table_old[(uint32_t)frac];
+    // if out of bounds, return signed pi/2
+    if (frac >= VALUES_IN_RANGE) {
+        return (M_PI / 2) * neg;
     }
-    return theta;
+    // lookup value in lookup table
+    theta = arctan_lookup_table_old[(uint32_t)(frac)];
+    return theta*neg;
     // return convert_to_floating(theta, SCALE_FACTOR_ARCTAN);
 }
 

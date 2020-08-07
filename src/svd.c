@@ -77,10 +77,14 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
     fixed_point_v_t v_trans_prime_1[4][4], v_trans_prime_2[4][4];
     fixed_point_m_t m_prime_1[4][4], m_prime_2[4][4];
 
+    /**
+     * Create a table of pointers to the matricies for calculations.
+     */
     fixed_point_u_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
     fixed_point_u_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
     fixed_point_m_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
 
+    // Variables to track which matrix to use for input vs. output
     int input = 0, output = 1;
 
     // Convert the input matricies to fixed point.
@@ -94,7 +98,6 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
         }
     }
 
-    int count = 0;
     for (int i = 0; i < 3; i++)
     {
         for (int j = i + 1; j < 4; j++)
@@ -105,18 +108,8 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
              * 
              * TODO: Implement all of these functions.
              */
-            floating_point_t theta_sum, theta_diff;
-            if (count % 2 == 0)
-            {
-                theta_sum = atan((*access(m_mats[0], 4, j, i) + *access(m_mats[0], 4, i, j)) / (floating_point_t)(*access(m_mats[0], 4, j, j) - *access(m_mats[0], 4, i, i)));
-                theta_diff = atan((*access(m_mats[0], 4, j, i) - *access(m_mats[0], 4, i, j)) / (floating_point_t)(*access(m_mats[0], 4, j, j) + *access(m_mats[0], 4, i, i)));
-            }
-            else
-            {
-                theta_sum = atan((*access(m_mats[1], 4, j, i) + *access(m_mats[1], 4, i, j)) / (floating_point_t)(*access(m_mats[1], 4, j, j) - *access(m_mats[1], 4, i, i)));
-                theta_diff = atan((*access(m_mats[1], 4, j, i) - *access(m_mats[1], 4, i, j)) / (floating_point_t)(*access(m_mats[1], 4, j, j) + *access(m_mats[1], 4, i, i)));
-            }
-
+            floating_point_t theta_sum = atan((*access(m_mats[input], 4, j, i) + *access(m_mats[input], 4, i, j)) / (floating_point_t)(*access(m_mats[input], 4, j, j) - *access(m_mats[input], 4, i, i)));
+            floating_point_t theta_diff = atan((*access(m_mats[input], 4, j, i) - *access(m_mats[input], 4, i, j)) / (floating_point_t)(*access(m_mats[input], 4, j, j) + *access(m_mats[input], 4, i, i)));
             floating_point_t theta_l = (theta_sum - theta_diff) / 2;
             floating_point_t theta_r = theta_sum - theta_l;
             floating_point_t sin_theta_l = sin(theta_l);
@@ -178,20 +171,16 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
 
             fixed_point_m_tmp_t m_prime_tmp[4][4];
 
-            if (count++ % 2 == 0)
-            {                                                                       // Do the calculations
-                mat_mul_u_x_u(4, u_mats[0], &u_ij_trans[0][0], u_mats[1]);          // [U][U_ij_T] = [U']
-                mat_mul_u_x_m(4, &u_ij[0][0], m_mats[0], &m_prime_tmp[0][0]);       // [U_ij][M] = [M'_tmp]
-                mat_mul_m_x_v(4, &m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[1]); // [M_tmp][V_ij_T] = [M']
-                mat_mul_v_x_v(4, &v_ij_trans[0][0], v_mats[0], v_mats[1]);          // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
-            }
-            else
-            {
-                mat_mul_u_x_u(4, u_mats[1], &u_ij_trans[0][0], u_mats[0]);          // [U][U_ij_T] = [U']
-                mat_mul_u_x_m(4, &u_ij[0][0], m_mats[1], &m_prime_tmp[0][0]);       // [U_ij][M] = [M'_tmp]
-                mat_mul_m_x_v(4, &m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[0]); // [M_tmp][V_ij_T] = [M']
-                mat_mul_v_x_v(4, &v_ij_trans[0][0], v_mats[1], v_mats[0]);          // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
-            }
+            // Do the calculations
+            mat_mul_u_x_u(4, u_mats[input], &u_ij_trans[0][0], u_mats[output]);      // [U][U_ij_T] = [U']
+            mat_mul_u_x_m(4, &u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
+            mat_mul_m_x_v(4, &m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']
+            mat_mul_v_x_v(4, &v_ij_trans[0][0], v_mats[input], v_mats[output]);      // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
+
+            // swap input and output matricies.
+            int tmp = input;
+            input = output;
+            output = tmp;
         }
     }
 
@@ -199,9 +188,9 @@ void sweep(floating_point_t m[4][4], floating_point_t u[4][4], floating_point_t 
     {
         for (int col = 0; col < 4; col++)
         {
-            u[row][col] = convert_to_floating(u_prime_1[row][col], SCALE_FACTOR_U);
-            v_trans[row][col] = convert_to_floating(v_trans_prime_1[row][col], SCALE_FACTOR_V);
-            m[row][col] = convert_to_floating(m_prime_1[row][col], SCALE_FACTOR_M);
+            u[row][col] = convert_to_floating(*access(u_mats[input], 4, row, col), SCALE_FACTOR_U);
+            v_trans[row][col] = convert_to_floating(*access(v_mats[input], 4, row, col), SCALE_FACTOR_V);
+            m[row][col] = convert_to_floating(*access(m_mats[input], 4, row, col), SCALE_FACTOR_M);
         }
     }
 }

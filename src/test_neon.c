@@ -9,23 +9,23 @@
 
 volatile fixed_point_t A[N][M], B[N][M], SUM[N][M];
 
-void print_matrix(fixed_point_t m[N][M])
+void print_matrix(fixed_point_t *m)
 {
     for (int i = 0; i < N; i++)
     {
         printf("[");
         for (int j = 0; j < M - 1; j++)
         {
-            printf(" %d", m[i][j]);
+            printf(" %d", *(m + i * N + j));
         }
-        printf(" ]\n");
+        printf(" %d ]\n", *(m + i * N + M - 1));
     }
 }
 
 int main(void)
 {
     int i, j;
-    fixed_point_double_t A_neon, B_neon, SUM_neon;
+    int_32x2_t A_neon, B_neon, SUM_neon;
 
     for (i = 0; i < N; i++)
         for (j = 0; j < M; j++)

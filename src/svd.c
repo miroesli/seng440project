@@ -5,6 +5,7 @@
  */
 #include "svd.h"
 #include "svd_math.h"
+#include "memory.h"
 #include "config.h"
 
 static inline fixed_point_t *access(fixed_point_t *arr, size_t size, size_t row, size_t col)
@@ -68,7 +69,7 @@ void mat_mul_v_x_v(
  * @brief Performes a single sweep of the svd algorithm
  * 
  */
-void sweep(size_t size, floating_point_t m[size][size], floating_point_t u[size][size], floating_point_t v_trans[size][size])
+void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u[size][size], floating_point_t v_trans[size][size])
 {
     /**
      * Create temporary matricies for claculations.
@@ -128,26 +129,19 @@ void sweep(size_t size, floating_point_t m[size][size], floating_point_t u[size]
             /**
              * Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
              */
-            fixed_point_u_t u_ij[size][size] = {
-                {one_u, 0, 0, 0},
-                {0, one_u, 0, 0},
-                {0, 0, one_u, 0},
-                {0, 0, 0, one_u},
-            };
+            fixed_point_u_t u_ij[size][size];
+            fixed_point_u_t u_ij_trans[size][size];
+            fixed_point_v_t v_ij_trans[size][size];
 
-            fixed_point_u_t u_ij_trans[size][size] = {
-                {one_u, 0, 0, 0},
-                {0, one_u, 0, 0},
-                {0, 0, one_u, 0},
-                {0, 0, 0, one_u},
-            };
-
-            fixed_point_v_t v_ij_trans[size][size] = {
-                {one_v, 0, 0, 0},
-                {0, one_v, 0, 0},
-                {0, 0, one_v, 0},
-                {0, 0, 0, one_v},
-            };
+            memset(u_ij, 0, sizeof(fixed_point_u_t) * size * size);
+            memset(u_ij_trans, 0, sizeof(fixed_point_u_t) * size * size);
+            memset(v_ij_trans, 0, sizeof(fixed_point_v_t) * size * size);
+            for (int k = 0; k < size; k++)
+            {
+                u_ij[k][k] = one_u;
+                u_ij_trans[k][k] = one_u;
+                v_ij_trans[k][k] = one_v;
+            }
 
             /**
              * U_ij = [ cos(θl) -sin(θl) ]

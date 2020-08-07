@@ -13,6 +13,6 @@
  * @brief Performes a single sweep of the svd algorithm
  * 
  */
-void sweep(size_t size, floating_point_t m[size][size], floating_point_t u[size][size], floating_point_t v_trans[size][size]);
+void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u[size][size], floating_point_t v_trans[size][size]);
 
 #endif

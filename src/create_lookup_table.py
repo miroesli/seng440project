@@ -11,7 +11,7 @@ ARCTAN_TABLE_RANGE = 30
 # Constant range
 SINCOS_TABLE_RANGE = 2 * np.pi
 # the resolution of the table
-VALUES = 3000
+VALUES = 10000
 # scale factor between float and fixed point integer
 SCALE_FACTOR = 1 << 31
 
@@ -33,9 +33,9 @@ stored in a c header file.
 
 
 def create_lookup_table(value_function, range, values):
-    for index, x in enumerate(np.arange(0, range+range/values, range/values)):
+    for index, x in enumerate(np.arange(0, range, range/values)):
         y = value_function(x)
-        # TODO values not being rounded correctly
+        # TODO values not being rounded correctly - this is fine for fixed point?
         print('{:= 11d}'.format(int(y)), end="")
         if (index + 1) % 10 == 0:
             print(",")
@@ -65,7 +65,6 @@ def main():
             exit(1)
 
     value_func_switcher = {
-        # * SCALE_FACTOR
         "arctan": lambda y: np.arctan(y) * SCALE_FACTOR,
         "sin": lambda y: np.sin(y) * SCALE_FACTOR,
         "cos": lambda y: np.cos(y) * SCALE_FACTOR
@@ -79,7 +78,7 @@ def main():
 
     # Create c code lookup definition
     print("static const fixed_point_t %s_lookup_table[%d] = "
-          % (trig_function, VALUES+1))
+          % (trig_function, VALUES))
     print("{")
     create_lookup_table(value_function, range, VALUES)
     print("};")

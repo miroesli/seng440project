@@ -13,11 +13,12 @@ WRITE_TO_FILE = True
 # Range of arctan lookup table
 ARCTAN_TABLE_RANGE = 10
 # Constant range
-SINCOS_TABLE_RANGE = 2 * np.pi
+SINCOS_TABLE_RANGE = np.pi
 # the resolution of the table
 VALUES = 10000
 # scale factor between float and fixed point integer
-SCALE_FACTOR = 1 << 30
+SCALE_FACTOR_ARCTAN = 1 << 30
+SCALE_FACTOR_SINCOS = 1 << 29
 
 # TODO Consider creating and approximator instead for tan,
 # but for cos and sin just use lookup table.
@@ -78,9 +79,9 @@ def main():
             exit(1)
 
     value_func_switcher = {
-        "arctan": lambda y: np.arctan(y) * SCALE_FACTOR,
-        "sin": lambda y: np.sin(y) * SCALE_FACTOR,
-        "cos": lambda y: np.cos(y) * SCALE_FACTOR
+        "arctan": lambda y: np.arctan(y) * SCALE_FACTOR_ARCTAN,
+        "sin": lambda y: np.sin(y) * SCALE_FACTOR_SINCOS,
+        "cos": lambda y: np.cos(y) * SCALE_FACTOR_SINCOS
     }
     value_function = value_func_switcher.get(trig_function)
 

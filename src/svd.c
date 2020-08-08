@@ -45,13 +45,13 @@ void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fix
     printf("RHS: \n");
     print_matrix(RHS);
 
-    row_0 = vld1q_s32(access(RHS, size, 0, 0));
-    row_1 = vld1q_s32(access(RHS, size, 1, 0));
-    row_2 = vld1q_s32(access(RHS, size, 2, 0));
-    row_3 = vld1q_s32(access(RHS, size, 3, 0));
+    row_0 = vld1q_s32(RHS);
+    row_1 = vld1q_s32(RHS + 4);
+    row_2 = vld1q_s32(RHS + 8);
+    row_3 = vld1q_s32(RHS + 12);
 
     int32_t test[4];
-    vst1q_s32((const int32_t *)test[0][0], row_0);
+    vst1q_s32((int32_t *)test[0], row_0);
 
     for (int i = 0; i < 4; i++)
     {
@@ -68,23 +68,23 @@ void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fix
     //     vst1q_s32(access(out, size, i, 0), out_neon);
     // }
 
-    printf("NEON result: \n");
-    print_matrix(out);
+    // printf("NEON result: \n");
+    // print_matrix(out);
 
-    for (int i = 0; i < size; i++)
-    {
-        for (int j = 0; j < size; j++)
-        {
-            *access(out, size, i, j) = 0;
-            for (int k = 0; k < size; k++)
-            {
-                *access(out, size, i, j) += truncate(
-                    fixed_point_mul(
-                        *access(LHS, size, i, k),
-                        *access(RHS, size, k, j)));
-            }
-        }
-    }
+    // for (int i = 0; i < size; i++)
+    // {
+    //     for (int j = 0; j < size; j++)
+    //     {
+    //         *access(out, size, i, j) = 0;
+    //         for (int k = 0; k < size; k++)
+    //         {
+    //             *access(out, size, i, j) += truncate(
+    //                 fixed_point_mul(
+    //                     *access(LHS, size, i, k),
+    //                     *access(RHS, size, k, j)));
+    //         }
+    //     }
+    // }
     printf("OUR result: \n");
     print_matrix(out);
 }

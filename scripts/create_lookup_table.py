@@ -18,7 +18,7 @@ SINCOS_TABLE_RANGE = np.pi
 VALUES = 10000
 # scale factor between float and fixed point integer
 SCALE_FACTOR_ARCTAN = 1 << 13
-SCALE_FACTOR_SINCOS = 1 << 29
+SCALE_FACTOR_SINCOS = 1 << 13
 
 # TODO Consider creating and approximator instead for tan,
 # but for cos and sin just use lookup table.

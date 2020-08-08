@@ -6,14 +6,19 @@ A table for sin, cos or arctan is generated based on selection.
 import sys
 import numpy as np
 
+# DEBUG
+DEBUG = False
+# Print to file
+WRITE_TO_FILE = True
 # Range of arctan lookup table
-ARCTAN_TABLE_RANGE = 30
+ARCTAN_TABLE_RANGE = 10
 # Constant range
-SINCOS_TABLE_RANGE = 2 * np.pi
+SINCOS_TABLE_RANGE = np.pi
 # the resolution of the table
-VALUES = 3000
+VALUES = 10000
 # scale factor between float and fixed point integer
-SCALE_FACTOR = 1 << 31
+SCALE_FACTOR_ARCTAN = 1 << 30
+SCALE_FACTOR_SINCOS = 1 << 29
 
 # TODO Consider creating and approximator instead for tan,
 # but for cos and sin just use lookup table.
@@ -32,15 +37,24 @@ stored in a c header file.
 """
 
 
-def create_lookup_table(value_function, range, values):
-    for index, x in enumerate(np.arange(0, range+range/values, range/values)):
+def create_lookup_table(f, value_function, range, values):
+    for index, x in enumerate(np.arange(0, range, range/values)):
         y = value_function(x)
-        # TODO values not being rounded correctly
-        print('{:= 11d}'.format(int(y)), end="")
+        # TODO values not being rounded correctly - this is fine for fixed point?
+        if DEBUG:
+            print('{:= 11d}'.format(int(y)), end="")
+        if WRITE_TO_FILE:
+            f.write('{:= 11d}'.format(int(y)))
         if (index + 1) % 10 == 0:
-            print(",")
+            if DEBUG:
+                print(",")
+            if WRITE_TO_FILE:
+                f.write(",\n")
         else:
-            print(", ", end="")
+            if DEBUG:
+                print(", ", end="")
+            if WRITE_TO_FILE:
+                f.write(", ")
 
 
 """Print the correct usage of the script."""
@@ -65,10 +79,9 @@ def main():
             exit(1)
 
     value_func_switcher = {
-        # * SCALE_FACTOR
-        "arctan": lambda y: np.arctan(y) * SCALE_FACTOR,
-        "sin": lambda y: np.sin(y) * SCALE_FACTOR,
-        "cos": lambda y: np.cos(y) * SCALE_FACTOR
+        "arctan": lambda y: np.arctan(y) * SCALE_FACTOR_ARCTAN,
+        "sin": lambda y: np.sin(y) * SCALE_FACTOR_SINCOS,
+        "cos": lambda y: np.cos(y) * SCALE_FACTOR_SINCOS
     }
     value_function = value_func_switcher.get(trig_function)
 
@@ -78,11 +91,50 @@ def main():
         range = SINCOS_TABLE_RANGE
 
     # Create c code lookup definition
-    print("static const fixed_point_t %s_lookup_table[%d] = "
-          % (trig_function, VALUES+1))
-    print("{")
-    create_lookup_table(value_function, range, VALUES)
-    print("};")
+    f = None
+    if WRITE_TO_FILE:
+        f = open("%s_lookup_table.h" % trig_function, "w")
+
+    header_content = \
+        """/*
+ *
+ * %s_lookup_table.h
+ *
+ */
+
+#ifndef %s_lookup_table_h
+#define %s_lookup_table_h
+
+#include "svd_math.h"
+
+"""
+    if DEBUG:
+        print(header_content % (trig_function, trig_function, trig_function))
+    if WRITE_TO_FILE:
+        f.write(header_content % (trig_function, trig_function, trig_function))
+    if DEBUG:
+        print("static const fixed_point_t %s_lookup_table[%d] = "
+              % (trig_function, VALUES))
+    if WRITE_TO_FILE:
+        f.write("static const fixed_point_t %s_lookup_table[%d] = \n"
+                % (trig_function, VALUES))
+    if DEBUG:
+        print("{")
+    if WRITE_TO_FILE:
+        f.write("{\n")
+
+    # write the numbers
+    create_lookup_table(f, value_function, range, VALUES)
+
+    if DEBUG:
+        print("}; \n\n#endif")
+    if WRITE_TO_FILE:
+        f.write("}; \n\n#endif")
+
+    if WRITE_TO_FILE:
+        print("Wrote lookup table to %s_lookup_table.h" % trig_function)
+    if WRITE_TO_FILE:
+        f.close()
 
 
 if __name__ == "__main__":

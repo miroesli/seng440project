@@ -1,6 +1,4 @@
 #include "svd_math.h"
-#include "stdio.h"
-#include "tables.h"
 
 /**
  * @brief Convert a floating_point_t to a fixed_point_t with a given scale factor
@@ -27,7 +25,26 @@ fixed_point_t convert_to_fixed(floating_point_t floating, size_t scale_factor)
  */
 fixed_point_u_dp_t fixed_point_mul(fixed_point_u_t LHS, fixed_point_u_t RHS)
 {
-    return (fixed_point_double_t)LHS * (fixed_point_double_t)RHS * 2;
+    return (fixed_point_double_t)LHS * (fixed_point_double_t)RHS * 8;
+}
+
+/**
+ * @brief Divides two fixed point_t after scaling the LHS to a fixed_point_double_t
+ * 
+ * @param LHS 
+ * @param RHS 
+ * @return fixed_point_double_t 
+ */
+fixed_point_double_t fixed_point_div(fixed_point_t LHS, fixed_point_t RHS)
+{
+    if (RHS == 0)
+    {
+        int sign_LHS = LHS < 0 ? -1 : 1,
+            sigh_RHS = RHS < 0 ? -1 : 1;
+
+        return sign_LHS * sigh_RHS == 1 ? 2147483647 : -2147483648;
+    }
+    return ((fixed_point_double_t)LHS << 32) / RHS;
 }
 
 /**
@@ -63,32 +80,61 @@ floating_point_t convert_to_floating(fixed_point_double_t f, size_t scale_factor
  * @param frac - The floating point number to calcualte artan with
  * @return floating_point_t
  */
-floating_point_t arctan_lookup(floating_point_t frac)
+fixed_point_t arctan_lookup(fixed_point_double_t x)
 {
-    floating_point_t theta;
-    printf("FRAC: %f\n", frac);
-    if (frac < 0) {
-        theta = arctan_lookup_table_old[(uint32_t)(-frac)];
-        theta = -theta;
-    }
-    else {
-        theta = arctan_lookup_table_old[(uint32_t)frac];
-    }
-    return theta;
-    // return convert_to_floating(theta, SCALE_FACTOR_ARCTAN);
+    int sign_x = x < 0 ? -1 : 1;
+    fixed_point_double_t abs_x = x * sign_x;
+    fixed_point_double_t limit = (fixed_point_double_t)ARCTAN_RANGE << 32;
+
+    if (abs_x > limit)
+        return convert_to_fixed(M_PI / 2.0, SCALE_FACTOR_ARCTAN) * sign_x;
+
+    size_t idx = (abs_x * VALUES_IN_RANGE / ARCTAN_RANGE) >> 32;
+    return arctan_lookup_table[idx] * sign_x;
 }
 
 /**
  * @brief Obtains the sin value of a floating_point_t from a lookup table
  *
- * //TODO need to use fixedpoint modulo?
- *
- * @param theta - The floating point number to calcualte artan with
- * @return floating_point_t
+ * @param frac_fixed - The floating point number to calcualte artan with
+ * @return fixed_point_t
  */
-floating_point_t sin_lookup(floating_point_t theta)
+fixed_point_t sin_lookup(fixed_point_double_t x)
 {
-    // theta = theta % (2*M_PI);
-    // fixed_point_t frac = sin_lookup_table[(uint32_t)(theta)];
-    // return convert_to_floating(frac, SCALE_FACTOR_ARCTAN);
+    // printf("x (flt): %f\n", convert_to_floating(x, SCALE_FACTOR_ARCTAN));
+    int sign_x = x < 0 ? -1 : 1;
+    // abs_X = abs_x * SF
+    fixed_point_double_t abs_x = x * sign_x;
+
+    // abx_X / SF = abs_x
+
+    fixed_point_double_t PI_FIXED = M_PI * (floating_point_t)(1 << SCALE_FACTOR_ARCTAN);
+    int idx = abs_x * VALUES_IN_RANGE / PI_FIXED;
+    return sin_lookup_table[idx] * sign_x;
+}
+
+/**
+ * @brief Obtains the cos value of a floating_point_t from a lookup table
+ *
+ * @param frac_fixed - The floating point number to calcualte artan with
+ * @return fixed_point_t
+ */
+fixed_point_t cos_lookup(fixed_point_double_t x)
+{
+    // printf("x (flt): %f\n", convert_to_floating(x, SCALE_FACTOR_ARCTAN));
+    int sign_x = x < 0 ? -1 : 1;
+    // abs_X = abs_x * SF
+    fixed_point_double_t abs_x = x * sign_x;
+
+    // abx_X / SF = abs_x
+
+    fixed_point_double_t PI_FIXED = M_PI * (floating_point_t)(1 << SCALE_FACTOR_ARCTAN);
+
+    // printf("abs x: %ld\n", abs_x);
+    // printf("abs x * N: %ld\n", abs_x * VALUES_IN_RANGE);
+    // printf("PI_FIXED: %ld\n", PI_FIXED);
+
+    int idx = abs_x * VALUES_IN_RANGE / PI_FIXED;
+    // printf("idx: %d\n", idx);
+    return cos_lookup_table[idx];
 }

@@ -6,7 +6,7 @@
 #include "svd.h"
 #include "arm_neon.h"
 
-static inline fixed_point_double_t *access(fixed_point_double_t *arr, size_t size, size_t row, size_t col)
+static fixed_point_double_t *access(fixed_point_double_t *arr, size_t size, size_t row, size_t col)
 {
     return arr + size * row + col;
 }

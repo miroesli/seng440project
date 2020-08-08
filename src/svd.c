@@ -4,8 +4,9 @@
  *
  */
 #include "svd.h"
+#include "arm_neon.h"
 
-static inline fixed_point_t *access(fixed_point_t *arr, size_t size, size_t row, size_t col)
+static inline fixed_point_double_t *access(fixed_point_double_t *arr, size_t size, size_t row, size_t col)
 {
     return arr + size * row + col;
 }
@@ -20,47 +21,24 @@ static inline fixed_point_t *access(fixed_point_t *arr, size_t size, size_t row,
  * @param RHS
  * @param out
  */
-void mat_mul(int size, fixed_point_t *LHS, fixed_point_t *RHS, fixed_point_t *out)
+void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fixed_point_double_t *out)
 {
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+
+    row_0 = vld1q_s32(access(RHS, size, 0, 0));
+    row_1 = vld1q_s32(access(RHS, size, 1, 0));
+    row_2 = vld1q_s32(access(RHS, size, 2, 0));
+    row_3 = vld1q_s32(access(RHS, size, 3, 0));
+
     for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < size; j++)
-        {
-            *access(out, size, i, j) = 0;
-            for (int k = 0; k < size; k++)
-            {
-                *access(out, size, i, j) += truncate(
-                    fixed_point_mul(
-                        *access(LHS, size, i, k),
-                        *access(RHS, size, k, j)));
-            }
-        }
+        out_neon = vmulq_n_s32(row_0, *access(LHS, size, i, 0));
+        out_neon = vaddq_s32(vmulq_n_s32(row_1, *access(LHS, size, i, 1)), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_2, *access(LHS, size, i, 2)), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_3, *access(LHS, size, i, 3)), out_neon);
+        vst1q_s32(access(out, size, i, 0), out_neon);
     }
 }
-
-void mat_mul_u_x_u(
-    int size,
-    fixed_point_u_t *LHS,
-    fixed_point_u_t *RHS,
-    fixed_point_u_t *out) __attribute__((alias("mat_mul")));
-
-void mat_mul_u_x_m(
-    int size,
-    fixed_point_u_t *LHS,
-    fixed_point_m_t *RHS,
-    fixed_point_m_tmp_t *out) __attribute__((alias("mat_mul")));
-
-void mat_mul_m_x_v(
-    int size,
-    fixed_point_m_tmp_t *LHS,
-    fixed_point_v_t *RHS,
-    fixed_point_m_t *out) __attribute__((alias("mat_mul")));
-
-void mat_mul_v_x_v(
-    int size,
-    fixed_point_v_t *LHS,
-    fixed_point_v_t *RHS,
-    fixed_point_v_t *out) __attribute__((alias("mat_mul")));
 
 /**
  * @brief Performes a single sweep of the svd algorithm
@@ -76,16 +54,16 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
      *
      * To avoid copying during the switch, just the pointers to the matricies are flipped.
      */
-    fixed_point_u_t u_prime_1[size][size], u_prime_2[size][size];
-    fixed_point_v_t v_trans_prime_1[size][size], v_trans_prime_2[size][size];
-    fixed_point_m_t m_prime_1[size][size], m_prime_2[size][size];
+    fixed_point_double_t u_prime_1[size][size], u_prime_2[size][size];
+    fixed_point_double_t v_trans_prime_1[size][size], v_trans_prime_2[size][size];
+    fixed_point_double_t m_prime_1[size][size], m_prime_2[size][size];
 
     /**
      * Create a table of pointers to the matricies for calculations.
      */
-    fixed_point_u_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
-    fixed_point_u_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
-    fixed_point_m_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
+    fixed_point_double_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
+    fixed_point_double_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
+    fixed_point_double_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
 
     // Variables to track which matrix to use for input vs. output
     int input = 0, output = 1;
@@ -128,21 +106,21 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             theta_l_fixed = ((fixed_point_double_t)theta_sum_fixed - (fixed_point_double_t)theta_diff_fixed) >> 1;
             theta_r_fixed = theta_sum_fixed - theta_l_fixed;
 
-            fixed_point_t sin_theta_l_fixed = sin_lookup(theta_l_fixed);
-            fixed_point_t cos_theta_l_fixed = cos_lookup(theta_l_fixed);
-            fixed_point_t sin_theta_r_fixed = sin_lookup(theta_r_fixed);
-            fixed_point_t cos_theta_r_fixed = cos_lookup(theta_r_fixed);
+            fixed_point_double_t sin_theta_l_fixed = sin_lookup(theta_l_fixed);
+            fixed_point_double_t cos_theta_l_fixed = cos_lookup(theta_l_fixed);
+            fixed_point_double_t sin_theta_r_fixed = sin_lookup(theta_r_fixed);
+            fixed_point_double_t cos_theta_r_fixed = cos_lookup(theta_r_fixed);
 
             /**
              * Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
              */
-            fixed_point_u_t u_ij[size][size];
-            fixed_point_u_t u_ij_trans[size][size];
-            fixed_point_v_t v_ij_trans[size][size];
+            fixed_point_double_t u_ij[size][size];
+            fixed_point_double_t u_ij_trans[size][size];
+            fixed_point_double_t v_ij_trans[size][size];
 
-            memset(u_ij, 0, sizeof(fixed_point_u_t) * size * size);
-            memset(u_ij_trans, 0, sizeof(fixed_point_u_t) * size * size);
-            memset(v_ij_trans, 0, sizeof(fixed_point_v_t) * size * size);
+            memset(u_ij, 0, sizeof(fixed_point_double_t) * size * size);
+            memset(u_ij_trans, 0, sizeof(fixed_point_double_t) * size * size);
+            memset(v_ij_trans, 0, sizeof(fixed_point_double_t) * size * size);
             for (int k = 0; k < size; k++)
             {
                 u_ij[k][k] = one_u;
@@ -177,14 +155,14 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             v_ij_trans[i][j] = sin_theta_r_fixed;
             v_ij_trans[j][i] = -sin_theta_r_fixed;
 
-            fixed_point_m_tmp_t m_prime_tmp[size][size];
+            fixed_point_double_t m_prime_tmp[size][size];
 
             // Do the calculations
             //
-            mat_mul_u_x_u(size, u_mats[input], &u_ij_trans[0][0], u_mats[output]);      // [U][U_ij_T] = [U']
-            mat_mul_u_x_m(size, &u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
-            mat_mul_m_x_v(size, &m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']
-            mat_mul_v_x_v(size, &v_ij_trans[0][0], v_mats[input], v_mats[output]);      // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
+            mat_mul(size, u_mats[input], &u_ij_trans[0][0], u_mats[output]);      // [U][U_ij_T] = [U']
+            mat_mul(size, &u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
+            mat_mul(size, &m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']
+            mat_mul(size, &v_ij_trans[0][0], v_mats[input], v_mats[output]);      // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
 
             // swap input and output matricies.
             int tmp = input;

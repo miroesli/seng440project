@@ -2,6 +2,19 @@
 #include "svd.h"
 #include "svd_math.h"
 #include <assert.h>
+#include "arctan_lookup_table.h"
+#include "sin_lookup_table.h"
+#include "cos_lookup_table.h"
+#include <math.h>
+
+floating_point_t m[4][4] = {
+    {31, 77, -11, 26},
+    {-42, 14, 79, -53},
+    {-68, -10, 45, 90},
+    {34, 16, 38, -19},
+};
+
+fixed_point_t m_fixed[4][4];
 
 int main()
 {
@@ -38,38 +51,82 @@ int main()
     // printf("m_x_v_f: %f u*m*v: %f\n", u_x_m_x_v_f, u * m * v);
     // printf("v_x_v_f: %f v*v: %f\n", v_x_v_f, v * v);
 
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            m_fixed[i][j] = convert_to_fixed(m[i][j], SCALE_FACTOR_M);
+        }
+    }
 
-    floating_point_t frac_unscaled = 0.1;
-    floating_point_t frac = frac_unscaled * VALUES_IN_RANGE / ARCTAN_RANGE;
-    fixed_point_t theta_fixed = arctan_lookup_table[(uint32_t)(frac)];
-    printf("theta fixed initial: %d\n", theta_fixed);
-    printf("frac scaled %f\n", ((1 << 30) * atan(frac_unscaled)));
-    floating_point_t theta_float = convert_to_floating(theta_fixed, SCALE_FACTOR_ARCTAN);
-    printf("theta float: %f\n", theta_float);
-    floating_point_t frac_unscaled_reverse = tan(theta_float);
-    printf("frac unscaled reverse: %f\n", frac_unscaled_reverse);
-    fixed_point_t theta_fixed_reverse = convert_to_fixed(theta_float, SCALE_FACTOR_ARCTAN);
-    printf("theta fixed reverse: %d\n", theta_fixed_reverse);
+    int size = 4;
+    for (int sweep = 0; sweep < 4; sweep++)
+    {
+        for (int i = 0; i < size - 1; i++)
+        {
+            for (int j = i + 1; j < size; j++)
+            {
+                // i = 0; j = 1;
+                // Replicating the first iteration of the sweep
+                fixed_point_t m_ij = m_fixed[i][j], m_ji = m_fixed[j][i], m_ii = m_fixed[i][i], m_jj = m_fixed[j][j];
 
-    fixed_point_t theta_sum = arctan_lookup(frac_unscaled);
-    printf("theta sum fixed: %d\n", theta_sum);
-    printf("theta sum float: %f\n", convert_to_floating(theta_sum, SCALE_FACTOR_ARCTAN));
-    floating_point_t frac_unscaled_2 = 0.3;
-    fixed_point_t theta_diff = arctan_lookup(frac_unscaled_2);
-    printf("theta diff fixed: %d\n", theta_diff);
-    printf("theta diff float: %f\n", convert_to_floating(theta_diff, SCALE_FACTOR_ARCTAN));
-    fixed_point_t theta_l = (theta_sum - theta_diff) >> 1;
-    printf("theta l fixed: %d\n", theta_l);
-    printf("theta l float: %f\n", convert_to_floating(theta_l, SCALE_FACTOR_ARCTAN));
-    fixed_point_t theta_r = theta_sum - theta_l;
-    printf("theta r fixed: %d\n", theta_r);
-    printf("theta r float: %f\n", convert_to_floating(theta_r, SCALE_FACTOR_ARCTAN));
-    fixed_point_t sin_theta_l_fixed = sin_lookup(theta_l);
-    printf("sin_theta_l fixed: %d\n", sin_theta_l_fixed);
-    printf("sin_theta_l float: %f\n", convert_to_floating(sin_theta_l_fixed, SCALE_FACTOR_SINCOS+1));
-    fixed_point_t cos_theta_l_fixed = cos_lookup(theta_l);
-    fixed_point_t sin_theta_r_fixed = sin_lookup(theta_r);
-    printf("sin_theta_r fixed: %d\n", sin_theta_r_fixed);
-    printf("sin_theta_r float: %f\n", convert_to_floating(sin_theta_r_fixed, SCALE_FACTOR_SINCOS+1));
-    fixed_point_t cos_theta_r_fixed = cos_lookup(theta_r);
+                floating_point_t theta_sum_fixed, theta_diff_fixed;
+
+                // Calculate theta_sum_fixed
+                fixed_point_double_t x = fixed_point_div(m_ji + m_ij, m_jj - m_ii);
+                theta_sum_fixed = arctan_lookup(x);
+
+                floating_point_t theta_sum_exp = atan((m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
+
+                // printf("x (flt): %f\n", convert_to_floating(x, 32));
+                // printf("x (exp): %f\n", (m[j][i] + m[i][j]) / (m[j][j] - m[i][i]));
+                // printf("theta_sum: %f\n", convert_to_floating(theta_sum_fixed, SCALE_FACTOR_ARCTAN));
+                // printf("theta_sum (exp): %f", theta_sum_exp);
+
+                // Calculate theta_diff_fixed
+                x = fixed_point_div(m_ji - m_ij, m_jj + m_ii);
+                theta_diff_fixed = arctan_lookup(x);
+
+                floating_point_t theta_diff_exp = atan((m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
+
+                // printf("x (flt): %f\n", convert_to_floating(x, 32));
+                // printf("x (exp): %f\n", (m[j][i] - m[i][j]) / (m[j][j] + m[i][i]));
+                // printf("theta_diff: %f\n", convert_to_floating(theta_diff_fixed, SCALE_FACTOR_ARCTAN));
+                // printf("theta_diff (exp): %f\n\n", theta_diff_exp);
+
+                // Ok up to here
+                fixed_point_double_t theta_l_fixed, theta_r_fixed;
+                theta_l_fixed = ((fixed_point_double_t)theta_sum_fixed - (fixed_point_double_t)theta_diff_fixed) >> 1;
+                theta_r_fixed = theta_sum_fixed - theta_l_fixed;
+
+                floating_point_t theta_l_exp = (theta_sum_exp - theta_diff_exp) / 2;
+                floating_point_t theta_r_exp = (theta_sum_exp - theta_l_exp);
+                // printf("theta_l      : %f\n", convert_to_floating(theta_l_fixed, SCALE_FACTOR_ARCTAN));
+                // printf("theta_l (exp): %f\n", theta_l_exp);
+                // printf("theta_r      : %f\n", convert_to_floating(theta_r_fixed, SCALE_FACTOR_ARCTAN));
+                // printf("theta_r (exp): %f\n", theta_r_exp);
+
+                fixed_point_t sin_theta_l, cos_theta_l, sin_theta_r, cos_theta_r;
+                sin_theta_l = sin_lookup(theta_l_fixed);
+                sin_theta_r = sin_lookup(theta_r_fixed);
+                cos_theta_l = cos_lookup(theta_l_fixed);
+                cos_theta_r = cos_lookup(theta_r_fixed);
+
+                floating_point_t sin_theta_l_exp = sin(theta_l_exp);
+                floating_point_t sin_theta_r_exp = sin(theta_r_exp);
+                floating_point_t cos_theta_l_exp = cos(theta_l_exp);
+                floating_point_t cos_theta_r_exp = cos(theta_r_exp);
+
+                printf("sin_theta_l (flt): %f\n", convert_to_floating(sin_theta_l, SCALE_FACTOR_SINCOS));
+                printf("sin_theta_l (exp): %f\n", sin_theta_l_exp);
+                printf("sin_theta_r (flt): %f\n", convert_to_floating(sin_theta_r, SCALE_FACTOR_SINCOS));
+                printf("sin_theta_r (exp): %f\n", sin_theta_r_exp);
+                printf("cos_theta_l (flt): %f\n", convert_to_floating(cos_theta_l, SCALE_FACTOR_SINCOS));
+                printf("cos_theta_l (exp): %f\n", cos_theta_l_exp);
+                printf("cos_theta_r (flt): %f\n", convert_to_floating(cos_theta_r, SCALE_FACTOR_SINCOS));
+                printf("cos_theta_r (exp): %f\n", cos_theta_r_exp);
+                printf("\n");
+            }
+        }
+    }
 }

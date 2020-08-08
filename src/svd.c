@@ -83,9 +83,9 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
     /**
      * Create a table of pointers to the matricies for calculations.
      */
-    fixed_point_u_t *u_mats[] ={ &u_prime_1[0][0], &u_prime_2[0][0] };
-    fixed_point_u_t *v_mats[] ={ &v_trans_prime_1[0][0], &v_trans_prime_2[0][0] };
-    fixed_point_m_t *m_mats[] ={ &m_prime_1[0][0], &m_prime_2[0][0] };
+    fixed_point_u_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
+    fixed_point_u_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
+    fixed_point_m_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
 
     // Variables to track which matrix to use for input vs. output
     int input = 0, output = 1;
@@ -106,25 +106,32 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
      */
     for (int i = 0; i < size - 1; i++)
     {
-        for (int j = i + 1; j < size; j++)
+        for (int j = i + 1; j < 4; j++)
         {
+            fixed_point_t m_ij = *access(m_mats[input], size, i, j),
+                          m_ji = *access(m_mats[input], size, j, i),
+                          m_ii = *access(m_mats[input], size, i, i),
+                          m_jj = *access(m_mats[input], size, j, j);
 
             /**
              * Do all of the angle calculations
              *
              * TODO: Implement all of these functions.
              */
+            fixed_point_double_t x = fixed_point_div(m_ji + m_ij, m_jj - m_ii);
+            fixed_point_t theta_sum_fixed = arctan_lookup(x);
 
-            fixed_point_t theta_sum = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) + *access(m_mats[input], size, i, j))
-                / (floating_point_t)(*access(m_mats[input], size, j, j) - *access(m_mats[input], size, i, i))));
-            fixed_point_t theta_diff = arctan_lookup((floating_point_t)((*access(m_mats[input], size, j, i) - *access(m_mats[input], size, i, j))
-                / (floating_point_t)(*access(m_mats[input], size, j, j) + *access(m_mats[input], size, i, i))));
-            fixed_point_t theta_l = (theta_sum - theta_diff) >> 1;
-            fixed_point_t theta_r = theta_sum - theta_l;
-            fixed_point_t sin_theta_l_fixed = sin_lookup(theta_l);
-            fixed_point_t cos_theta_l_fixed = cos_lookup(theta_l);
-            fixed_point_t sin_theta_r_fixed = sin_lookup(theta_r);
-            fixed_point_t cos_theta_r_fixed = cos_lookup(theta_r);
+            x = fixed_point_div(m_ji - m_ij, m_jj + m_ii);
+            fixed_point_t theta_diff_fixed = arctan_lookup(x);
+
+            fixed_point_double_t theta_l_fixed, theta_r_fixed;
+            theta_l_fixed = ((fixed_point_double_t)theta_sum_fixed - (fixed_point_double_t)theta_diff_fixed) / 2;
+            theta_r_fixed = theta_sum_fixed - theta_l_fixed;
+
+            fixed_point_t sin_theta_l_fixed = sin_lookup(theta_l_fixed);
+            fixed_point_t cos_theta_l_fixed = cos_lookup(theta_l_fixed);
+            fixed_point_t sin_theta_r_fixed = sin_lookup(theta_r_fixed);
+            fixed_point_t cos_theta_r_fixed = cos_lookup(theta_r_fixed);
 
             /**
              * Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
@@ -173,6 +180,7 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             fixed_point_m_tmp_t m_prime_tmp[size][size];
 
             // Do the calculations
+            //
             mat_mul_u_x_u(size, u_mats[input], &u_ij_trans[0][0], u_mats[output]);      // [U][U_ij_T] = [U']
             mat_mul_u_x_m(size, &u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
             mat_mul_m_x_v(size, &m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']

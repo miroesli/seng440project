@@ -88,7 +88,7 @@ void mat_mul(volatile fixed_point_double_t *LHS, volatile fixed_point_double_t *
     printf("RHS: \n");
     print_matrix(RHS);
 
-    row_0 = vld1q_s32(RHS);
+    row_0 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[0][0]);
     // row_1 = vld1q_s32(RHS + 4);
     // row_2 = vld1q_s32(RHS + 8);
     // row_3 = vld1q_s32(RHS + 12);

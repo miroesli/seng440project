@@ -31,8 +31,8 @@ floating_point_t v_trans[4][4] = {
 
 /**
  * @brief Helper function to print a 4x4 matrix
- * 
- * @param mat 
+ *
+ * @param mat
  */
 void mat_print(size_t size, floating_point_t mat[size][size])
 {

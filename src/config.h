@@ -16,8 +16,5 @@
 #include <stdlib.h>
 
 /* Main Definitions */
-#define ARCTAN_RANGE 30
-#define VALUES_IN_RANGE 3001
-#define SINCOS_RANGE M_PI * 2
 
 #endif

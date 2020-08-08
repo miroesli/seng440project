@@ -1,6 +1,7 @@
 #include "config.h"
 #include "svd.h"
 #include "svd_math.h"
+#include <assert.h>
 
 int main()
 {
@@ -37,21 +38,38 @@ int main()
     // printf("m_x_v_f: %f u*m*v: %f\n", u_x_m_x_v_f, u * m * v);
     // printf("v_x_v_f: %f v*v: %f\n", v_x_v_f, v * v);
 
-    // floating_point_t theta = arctan_lookup_table_old[(uint32_t)(frac)];
-    // fixed_point_t theta_fixed = arctan_lookup_table[(uint32_t)(theta_sum)];
-    // printf("\ntheta float: %f, theta fixed: %d\n", theta, theta_fixed);
-    // fixed_point_t theta2 = convert_to_fixed(theta, SCALE_FACTOR_ARCTAN);
-    // printf("theta fixed: %d\n", theta2);
-    // floating_point_t theta3 = convert_to_floating(theta2, SCALE_FACTOR_ARCTAN);
-    // printf("theta float: %f\n\n", theta3);
 
+    floating_point_t frac_unscaled = 0.1;
+    floating_point_t frac = frac_unscaled * VALUES_IN_RANGE / ARCTAN_RANGE;
+    fixed_point_t theta_fixed = arctan_lookup_table[(uint32_t)(frac)];
+    printf("theta fixed initial: %d\n", theta_fixed);
+    printf("frac scaled %f\n", ((1 << 30) * atan(frac_unscaled)));
+    floating_point_t theta_float = convert_to_floating(theta_fixed, SCALE_FACTOR_ARCTAN);
+    printf("theta float: %f\n", theta_float);
+    floating_point_t frac_unscaled_reverse = tan(theta_float);
+    printf("frac unscaled reverse: %f\n", frac_unscaled_reverse);
+    fixed_point_t theta_fixed_reverse = convert_to_fixed(theta_float, SCALE_FACTOR_ARCTAN);
+    printf("theta fixed reverse: %d\n", theta_fixed_reverse);
 
-    fixed_point_t theta_sum = arctan_lookup((floating_point_t)0.3);
-    fixed_point_t theta_diff = arctan_lookup((floating_point_t)0.4);
+    fixed_point_t theta_sum = arctan_lookup(frac_unscaled);
+    printf("theta sum fixed: %d\n", theta_sum);
+    printf("theta sum float: %f\n", convert_to_floating(theta_sum, SCALE_FACTOR_ARCTAN));
+    floating_point_t frac_unscaled_2 = 0.3;
+    fixed_point_t theta_diff = arctan_lookup(frac_unscaled_2);
+    printf("theta diff fixed: %d\n", theta_diff);
+    printf("theta diff float: %f\n", convert_to_floating(theta_diff, SCALE_FACTOR_ARCTAN));
     fixed_point_t theta_l = (theta_sum - theta_diff) >> 1;
+    printf("theta l fixed: %d\n", theta_l);
+    printf("theta l float: %f\n", convert_to_floating(theta_l, SCALE_FACTOR_ARCTAN));
     fixed_point_t theta_r = theta_sum - theta_l;
+    printf("theta r fixed: %d\n", theta_r);
+    printf("theta r float: %f\n", convert_to_floating(theta_r, SCALE_FACTOR_ARCTAN));
     fixed_point_t sin_theta_l_fixed = sin_lookup(theta_l);
+    printf("sin_theta_l fixed: %d\n", sin_theta_l_fixed);
+    printf("sin_theta_l float: %f\n", convert_to_floating(sin_theta_l_fixed, SCALE_FACTOR_SINCOS+1));
     fixed_point_t cos_theta_l_fixed = cos_lookup(theta_l);
     fixed_point_t sin_theta_r_fixed = sin_lookup(theta_r);
+    printf("sin_theta_r fixed: %d\n", sin_theta_r_fixed);
+    printf("sin_theta_r float: %f\n", convert_to_floating(sin_theta_r_fixed, SCALE_FACTOR_SINCOS+1));
     fixed_point_t cos_theta_r_fixed = cos_lookup(theta_r);
 }

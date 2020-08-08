@@ -29,11 +29,11 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 // exclusive end
 #define ARCTAN_RANGE 10 
 #define VALUES_IN_RANGE 10000
-#define SINCOS_RANGE M_PI * 2
+#define SINCOS_RANGE M_PI
 // Scale Factors
 // TODO check if factor u can be used instead?
 #define SCALE_FACTOR_ARCTAN 30
-#define SCALE_FACTOR_MOD 28
+#define SCALE_FACTOR_SINCOS 29
 #define SCALE_FACTOR_U 31
 #define SCALE_FACTOR_U_DP 2 * SCALE_FACTOR_U + 1
 #define SCALE_FACTOR_V 31

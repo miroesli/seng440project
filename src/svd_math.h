@@ -31,7 +31,7 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 #define SINCOS_RANGE M_PI
 // Scale Factors
 // TODO check if factor u can be used instead?
-#define SCALE_FACTOR_ARCTAN 15
+#define SCALE_FACTOR_ARCTAN 13
 #define SCALE_FACTOR_SINCOS 29
 #define SCALE_FACTOR_U SCALE_FACTOR_SINCOS
 #define SCALE_FACTOR_U_DP 2 * SCALE_FACTOR_U + 1

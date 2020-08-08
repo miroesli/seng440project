@@ -11,6 +11,20 @@ static inline fixed_point_double_t *access(fixed_point_double_t *arr, size_t siz
     return arr + size * row + col;
 }
 
+void print_matrix(const fixed_point_double_t *m)
+{
+    for (int i = 0; i < N; i++)
+    {
+        printf("[");
+        for (int j = 0; j < M - 1; j++)
+        {
+            printf(" %d", *(m + i * N + j));
+        }
+        printf(" %d ]\n", *(m + i * N + M - 1));
+    }
+    printf("\n");
+}
+
 /**
  * @brief Perfoms a fixed point matrix multiplication
  *
@@ -23,21 +37,24 @@ static inline fixed_point_double_t *access(fixed_point_double_t *arr, size_t siz
  */
 void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fixed_point_double_t *out)
 {
-    // int32x4_t row_0, row_1, row_2, row_3, out_neon;
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    // row_0 = vld1q_s32(access(RHS, size, 0, 0));
-    // row_1 = vld1q_s32(access(RHS, size, 1, 0));
-    // row_2 = vld1q_s32(access(RHS, size, 2, 0));
-    // row_3 = vld1q_s32(access(RHS, size, 3, 0));
+    row_0 = vld1q_s32(access(RHS, size, 0, 0));
+    row_1 = vld1q_s32(access(RHS, size, 1, 0));
+    row_2 = vld1q_s32(access(RHS, size, 2, 0));
+    row_3 = vld1q_s32(access(RHS, size, 3, 0));
 
-    // for (int i = 0; i < size; i++)
-    // {
-    //     out_neon = vmulq_n_s32(row_0, *access(LHS, size, i, 0));
-    //     out_neon = vaddq_s32(vmulq_n_s32(row_1, *access(LHS, size, i, 1)), out_neon);
-    //     out_neon = vaddq_s32(vmulq_n_s32(row_2, *access(LHS, size, i, 2)), out_neon);
-    //     out_neon = vaddq_s32(vmulq_n_s32(row_3, *access(LHS, size, i, 3)), out_neon);
-    //     vst1q_s32(access(out, size, i, 0), out_neon);
-    // }
+    for (int i = 0; i < size; i++)
+    {
+        out_neon = vmulq_n_s32(row_0, *access(LHS, size, i, 0));
+        out_neon = vaddq_s32(vmulq_n_s32(row_1, *access(LHS, size, i, 1)), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_2, *access(LHS, size, i, 2)), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_3, *access(LHS, size, i, 3)), out_neon);
+        vst1q_s32(access(out, size, i, 0), out_neon);
+    }
+
+    printf("NEON result: \n");
+    print_matrix(out);
 
     for (int i = 0; i < size; i++)
     {
@@ -53,6 +70,8 @@ void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fix
             }
         }
     }
+    printf("OUR result: \n");
+    print_matrix(out);
 }
 
 /**

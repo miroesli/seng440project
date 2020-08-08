@@ -6,12 +6,55 @@
 #include "svd.h"
 #include "arm_neon.h"
 
-static inline fixed_point_double_t *access(fixed_point_double_t *arr, size_t size, size_t row, size_t col)
+/**
+ * Create matricies for claculations.
+ *
+ * Two matricies are used to avoid copying. One matrix is used for input, and the
+ * other is used for output. Every iteration, the input and output matricies switch.
+ *
+ * To avoid copying during the switch, just the pointers to the matricies are flipped.
+ */
+static volatile fixed_point_double_t u_prime_1[SIZE][SIZE], u_prime_2[SIZE][SIZE];
+static volatile fixed_point_double_t v_trans_prime_1[SIZE][SIZE], v_trans_prime_2[SIZE][SIZE];
+static volatile fixed_point_double_t m_prime_1[SIZE][SIZE], m_prime_2[SIZE][SIZE];
+
+/**
+ * Create a table of pointers to the matricies for calculations.
+ */
+static volatile fixed_point_double_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
+static volatile fixed_point_double_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
+static volatile fixed_point_double_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
+
+/**
+ * Create matricies for internal calculations
+ */
+static volatile fixed_point_double_t u_ij[SIZE][SIZE];
+static volatile fixed_point_double_t u_ij_trans[SIZE][SIZE];
+static volatile fixed_point_double_t v_ij_trans[SIZE][SIZE];
+static volatile fixed_point_double_t m_prime_tmp[SIZE][SIZE];
+
+static void zero_mats()
 {
-    return arr + size * row + col;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            u_ij[i][j] = 0;
+            u_ij_trans[i][j] = 0;
+            v_ij_trans[i][j] = 0;
+        }
+    }
 }
 
-void print_matrix(const fixed_point_double_t *m)
+// Variables to track which matrix to use for input vs. output
+static int input = 0, output = 1;
+
+static inline volatile fixed_point_double_t *access(volatile fixed_point_double_t *arr, size_t row, size_t col)
+{
+    return arr + SIZE * row + col;
+}
+
+void print_matrix(const volatile fixed_point_double_t *m)
 {
     for (int i = 0; i < 4; i++)
     {
@@ -35,18 +78,9 @@ void print_matrix(const fixed_point_double_t *m)
  * @param RHS
  * @param out
  */
-void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fixed_point_double_t *out)
+void mat_mul(volatile fixed_point_double_t *LHS, volatile fixed_point_double_t *RHS, volatile fixed_point_double_t *out)
 {
-    volatile fixed_point_double_t M[4][4];
-    int32x4_t row_0, row_1, row_2, row_3, out_neon;
-
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            M[i][j] = *access(RHS, 4, i, j);
-        }
-    }
+    // int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
     // printf("LHS: \n");
     // print_matrix(LHS);
@@ -54,7 +88,7 @@ void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fix
     printf("RHS: \n");
     print_matrix(RHS);
 
-    row_0 = vld1q_s32((const fixed_point_double_t *)&M[0][0]);
+    row_0 = vld1q_s32(RHS);
     // row_1 = vld1q_s32(RHS + 4);
     // row_2 = vld1q_s32(RHS + 8);
     // row_3 = vld1q_s32(RHS + 12);
@@ -80,74 +114,53 @@ void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fix
     // printf("NEON result: \n");
     // print_matrix(out);
 
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < SIZE; i++)
     {
-        for (int j = 0; j < size; j++)
+        for (int j = 0; j < SIZE; j++)
         {
-            *access(out, size, i, j) = 0;
-            for (int k = 0; k < size; k++)
+            *access(out, i, j) = 0;
+            for (int k = 0; k < SIZE; k++)
             {
-                *access(out, size, i, j) += truncate(
+                *access(out, i, j) += truncate(
                     fixed_point_mul(
-                        *access(LHS, size, i, k),
-                        *access(RHS, size, k, j)));
+                        *access(LHS, i, k),
+                        *access(RHS, k, j)));
             }
         }
     }
-    printf("OUR result: \n");
-    print_matrix(out);
+    // printf("OUR result: \n");
+    // print_matrix(out);
 }
 
 /**
  * @brief Performes a single sweep of the svd algorithm
  *
  */
-void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u[size][size], floating_point_t v_trans[size][size])
+void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], floating_point_t v_trans[SIZE][SIZE])
 {
-    /**
-     * Create temporary matricies for claculations.
-     *
-     * Two matricies are used to avoid copying. One matrix is used for input, and the
-     * other is used for output. Every iteration, the input and output matricies switch.
-     *
-     * To avoid copying during the switch, just the pointers to the matricies are flipped.
-     */
-    volatile fixed_point_double_t u_prime_1[size][size], u_prime_2[size][size];
-    volatile fixed_point_double_t v_trans_prime_1[size][size], v_trans_prime_2[size][size];
-    volatile fixed_point_double_t m_prime_1[size][size], m_prime_2[size][size];
-
-    /**
-     * Create a table of pointers to the matricies for calculations.
-     */
-    volatile fixed_point_double_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
-    volatile fixed_point_double_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
-    volatile fixed_point_double_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
-
-    // Variables to track which matrix to use for input vs. output
-    int input = 0, output = 1;
 
     // Convert the input matricies to fixed point.
-    for (int row = 0; row < size; row++)
+    for (int row = 0; row < SIZE; row++)
     {
-        for (int col = 0; col < size; col++)
+        for (int col = 0; col < SIZE; col++)
         {
-            *access(m_mats[input], size, row, col) = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
-            *access(u_mats[input], size, row, col) = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
-            *access(v_mats[input], size, row, col) = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
+            *access(m_mats[input], row, col) = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
+            *access(u_mats[input], row, col) = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
+            *access(v_mats[input], row, col) = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
         }
     }
 
     /**
      * Start of iterations
      */
-    for (int i = 0; i < size - 1; i++)
+    for (int i = 0; i < SIZE - 1; i++)
     {
-        for (int j = i + 1; j < 4; j++)
+        for (int j = i + 1; j < SIZE; j++)
         {
-            fixed_point_t m_ij = *access(m_mats[input], size, i, j),
-                          m_ji = *access(m_mats[input], size, j, i),
-                          m_ii = *access(m_mats[input], size, i, i),
-                          m_jj = *access(m_mats[input], size, j, j);
+            fixed_point_t m_ij = *access(m_mats[input], i, j),
+                          m_ji = *access(m_mats[input], j, i),
+                          m_ii = *access(m_mats[input], i, i),
+                          m_jj = *access(m_mats[input], j, j);
 
             /**
              * Do all of the angle calculations
@@ -169,17 +182,10 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             fixed_point_double_t sin_theta_r_fixed = sin_lookup(theta_r_fixed);
             fixed_point_double_t cos_theta_r_fixed = cos_lookup(theta_r_fixed);
 
-            /**
-             * Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
-             */
-            volatile fixed_point_double_t u_ij[size][size];
-            volatile fixed_point_double_t u_ij_trans[size][size];
-            volatile fixed_point_double_t v_ij_trans[size][size];
+            // Reset the matricies to zero.
+            zero_mats();
 
-            memset(u_ij, 0, sizeof(fixed_point_double_t) * size * size);
-            memset(u_ij_trans, 0, sizeof(fixed_point_double_t) * size * size);
-            memset(v_ij_trans, 0, sizeof(fixed_point_double_t) * size * size);
-            for (int k = 0; k < size; k++)
+            for (int k = 0; k < SIZE; k++)
             {
                 u_ij[k][k] = one_u;
                 u_ij_trans[k][k] = one_u;
@@ -213,14 +219,12 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             v_ij_trans[i][j] = sin_theta_r_fixed;
             v_ij_trans[j][i] = -sin_theta_r_fixed;
 
-            fixed_point_double_t m_prime_tmp[size][size];
-
             // Do the calculations
             //
-            mat_mul(size, u_mats[input], &u_ij_trans[0][0], u_mats[output]);      // [U][U_ij_T] = [U']
-            mat_mul(size, &u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
-            mat_mul(size, &m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']
-            mat_mul(size, &v_ij_trans[0][0], v_mats[input], v_mats[output]);      // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
+            mat_mul(u_mats[input], &u_ij_trans[0][0], u_mats[output]);      // [U][U_ij_T] = [U']
+            mat_mul(&u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
+            mat_mul(&m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']
+            mat_mul(&v_ij_trans[0][0], v_mats[input], v_mats[output]);      // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
 
             // swap input and output matricies.
             int tmp = input;
@@ -230,13 +234,13 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
     }
 
     // Convert the fixed point matricies back into floating point.
-    for (int row = 0; row < size; row++)
+    for (int row = 0; row < SIZE; row++)
     {
-        for (int col = 0; col < size; col++)
+        for (int col = 0; col < SIZE; col++)
         {
-            u[row][col] = convert_to_floating(*access(u_mats[input], size, row, col), SCALE_FACTOR_U);
-            v_trans[row][col] = convert_to_floating(*access(v_mats[input], size, row, col), SCALE_FACTOR_V);
-            m[row][col] = convert_to_floating(*access(m_mats[input], size, row, col), SCALE_FACTOR_M);
+            u[row][col] = convert_to_floating(*access(u_mats[input], row, col), SCALE_FACTOR_U);
+            v_trans[row][col] = convert_to_floating(*access(v_mats[input], row, col), SCALE_FACTOR_V);
+            m[row][col] = convert_to_floating(*access(m_mats[input], row, col), SCALE_FACTOR_M);
         }
     }
 }

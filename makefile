@@ -3,7 +3,7 @@ all: svd svd_math main
 test:  svd_math test_c
 
 svd: 
-	gcc -c src/svd.c
+	gcc -mfpu=neon -O3 -c src/svd.c
 svd_math:
 	gcc -c src/svd_math.c
 main: svd svd_math

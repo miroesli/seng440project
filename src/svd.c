@@ -125,7 +125,7 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             fixed_point_t theta_diff_fixed = arctan_lookup(x);
 
             fixed_point_double_t theta_l_fixed, theta_r_fixed;
-            theta_l_fixed = ((fixed_point_double_t)theta_sum_fixed - (fixed_point_double_t)theta_diff_fixed) / 2;
+            theta_l_fixed = ((fixed_point_double_t)theta_sum_fixed - (fixed_point_double_t)theta_diff_fixed) >> 1;
             theta_r_fixed = theta_sum_fixed - theta_l_fixed;
 
             fixed_point_t sin_theta_l_fixed = sin_lookup(theta_l_fixed);

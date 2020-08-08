@@ -36,22 +36,6 @@ static volatile fixed_point_double_t m_prime_tmp[SIZE][SIZE];
 // Variables to track which matrix to use for input vs. output
 static int input = 0, output = 1;
 
-volatile fixed_point_double_t X[SIZE][SIZE] = {
-    {0, 1, 2, 3},
-    {4, 5, 6, 7},
-    {8, 9, 10, 11},
-    {12, 13, 14, 15},
-};
-
-volatile fixed_point_double_t Y[SIZE][SIZE] = {
-    {0, 1, 2, 3},
-    {4, 5, 6, 7},
-    {8, 9, 10, 11},
-    {12, 13, 14, 15},
-};
-
-volatile fixed_point_double_t OUT[SIZE][SIZE];
-
 void print_matrix(const fixed_point_double_t *m)
 {
     for (int i = 0; i < 4; i++)
@@ -71,12 +55,15 @@ static void mat_mul_u_x_u_ij_trans_NEON()
     int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
     print_matrix((const fixed_point_double_t *)&u_ij_trans[0][0]);
-    print_matrix((const fixed_point_double_t *)&Y[0][0]);
+    if (input == 0)
+        print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+    else
+        print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
 
-    row_0 = vld1q_s32((const fixed_point_double_t *)&Y[0][0]);
-    row_1 = vld1q_s32((const fixed_point_double_t *)&Y[1][0]);
-    row_2 = vld1q_s32((const fixed_point_double_t *)&Y[2][0]);
-    row_3 = vld1q_s32((const fixed_point_double_t *)&Y[3][0]);
+    row_0 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[0][0]);
+    row_1 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[1][0]);
+    row_2 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[2][0]);
+    row_3 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[3][0]);
 
     for (int i = 0; i < SIZE; i++)
     {
@@ -241,9 +228,6 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
             v_ij_trans[j][i] = -sin_theta_r_fixed;
 
             // Do the calculations
-            //
-            mat_mul_NEON();
-
             mat_mul_u_x_u_ij_trans_NEON(); // [U][U_ij_T] = [U']
             // mat_mul(&u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
             // mat_mul(&m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']

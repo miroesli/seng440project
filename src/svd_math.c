@@ -67,7 +67,7 @@ fixed_point_t arctan_lookup(floating_point_t frac)
     frac = frac * VALUES_IN_RANGE / ARCTAN_RANGE;
     // printf("FRAC: %f\n", frac);
     if (frac < 0) {
-        frac = -frac; //or abs(frac)?
+        frac = -frac; //TODO or abs(frac)?
         neg = -1;
     }
     // if out of bounds, return signed pi/2
@@ -82,22 +82,23 @@ fixed_point_t arctan_lookup(floating_point_t frac)
 /**
  * @brief Obtains the sin value of a floating_point_t from a lookup table
  *
- * //TODO need to use fixedpoint modulo?
- *
  * @param frac_fixed - The floating point number to calcualte artan with
  * @return fixed_point_t
  */
 fixed_point_t sin_lookup(fixed_point_t theta)
 {
-    // mod to 0-2pi
-    fixed_point_t theta_mod = theta % convert_to_fixed(M_PI*2, SCALE_FACTOR_MOD);
+    floating_point_t neg = 1;
+    if (theta < 0) {
+        theta = -theta; //TODO or abs(frac)?
+        neg = -1;
+    }
     // convert theta from fixed to floating
-    floating_point_t theta_float = convert_to_floating(theta_mod, SCALE_FACTOR_ARCTAN);
-    // floating_point_t frac_float = sin_lookup_table_old[(uint32_t)(theta_float)];
-    // fixed_point_t frac_converted = convert_to_floating(frac_float, SCALE_FACTOR_U);
+    floating_point_t theta_float = convert_to_floating(theta, SCALE_FACTOR_SINCOS);
+    theta_float = theta_float * VALUES_IN_RANGE / SINCOS_RANGE;
+    printf("sin theta float: %f\n", theta_float);
+    // fixed_point_t frac_fixed = sin_lookup_table[(uint32_t)(theta_float)]>>1;
     fixed_point_t frac_fixed = sin_lookup_table[(uint32_t)(theta_float)];
-    printf("sin: %d, %d\n", theta_mod, frac_fixed);
-    return frac_fixed;
+    return frac_fixed*neg;
 }
 
 /**
@@ -108,5 +109,14 @@ fixed_point_t sin_lookup(fixed_point_t theta)
  */
 fixed_point_t cos_lookup(fixed_point_t theta)
 {
-    return theta;
+    floating_point_t neg = 1;
+    if (theta < 0) {
+        theta = -theta; //TODO or abs(frac)?
+        neg = -1;
+    }
+    floating_point_t theta_float = convert_to_floating(theta, SCALE_FACTOR_ARCTAN);
+    theta_float = theta_float * VALUES_IN_RANGE / SINCOS_RANGE;
+    printf("cos theta float: %f\n", theta_float);
+    fixed_point_t frac_fixed = cos_lookup_table[(uint32_t)(theta_float)];
+    return frac_fixed*neg;
 }

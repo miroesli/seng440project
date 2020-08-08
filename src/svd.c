@@ -19,6 +19,13 @@ static volatile fixed_point_double_t v_trans_prime_1[SIZE][SIZE], v_trans_prime_
 static volatile fixed_point_double_t m_prime_1[SIZE][SIZE], m_prime_2[SIZE][SIZE];
 
 /**
+ * Create a table of pointers to the matricies for calculations.
+ */
+static volatile fixed_point_double_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
+static volatile fixed_point_double_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
+static volatile fixed_point_double_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
+
+/**
  * Create matricies for internal calculations
  */
 static volatile fixed_point_double_t u_ij[SIZE][SIZE];

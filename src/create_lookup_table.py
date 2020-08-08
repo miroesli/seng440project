@@ -7,9 +7,9 @@ import sys
 import numpy as np
 
 # DEBUG
-DEBUG = False
+DEBUG = True
 # Print to file
-WRITE_TO_FILE = True
+WRITE_TO_FILE = False
 # Range of arctan lookup table
 ARCTAN_TABLE_RANGE = 10
 # Constant range
@@ -17,7 +17,7 @@ SINCOS_TABLE_RANGE = np.pi
 # the resolution of the table
 VALUES = 10000
 # scale factor between float and fixed point integer
-SCALE_FACTOR_ARCTAN = 1 << 30
+SCALE_FACTOR_ARCTAN = 1 << 15
 SCALE_FACTOR_SINCOS = 1 << 29
 
 # TODO Consider creating and approximator instead for tan,
@@ -105,7 +105,7 @@ def main():
 #ifndef %s_lookup_table_h
 #define %s_lookup_table_h
 
-#include "svd_math.h"
+#include "../svd_math.h"
 
 """
     if DEBUG:

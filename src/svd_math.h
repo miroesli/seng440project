@@ -20,7 +20,7 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 
 #include "config.h"
 // #include "tables.h"
-#include "arctan_lookup_table.h"
+#include "tables/arctan_lookup_table.h"
 #include "sin_lookup_table.h"
 #include "cos_lookup_table.h"
 
@@ -31,7 +31,7 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 #define SINCOS_RANGE M_PI
 // Scale Factors
 // TODO check if factor u can be used instead?
-#define SCALE_FACTOR_ARCTAN 30
+#define SCALE_FACTOR_ARCTAN 15
 #define SCALE_FACTOR_SINCOS 29
 #define SCALE_FACTOR_U SCALE_FACTOR_SINCOS
 #define SCALE_FACTOR_U_DP 2 * SCALE_FACTOR_U + 1

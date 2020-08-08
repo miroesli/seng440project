@@ -112,16 +112,16 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
      *
      * To avoid copying during the switch, just the pointers to the matricies are flipped.
      */
-    fixed_point_double_t u_prime_1[size][size], u_prime_2[size][size];
-    fixed_point_double_t v_trans_prime_1[size][size], v_trans_prime_2[size][size];
-    fixed_point_double_t m_prime_1[size][size], m_prime_2[size][size];
+    volatile fixed_point_double_t u_prime_1[size][size], u_prime_2[size][size];
+    volatile fixed_point_double_t v_trans_prime_1[size][size], v_trans_prime_2[size][size];
+    volatile fixed_point_double_t m_prime_1[size][size], m_prime_2[size][size];
 
     /**
      * Create a table of pointers to the matricies for calculations.
      */
-    fixed_point_double_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
-    fixed_point_double_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
-    fixed_point_double_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
+    volatile fixed_point_double_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
+    volatile fixed_point_double_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
+    volatile fixed_point_double_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
 
     // Variables to track which matrix to use for input vs. output
     int input = 0, output = 1;
@@ -172,9 +172,9 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             /**
              * Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
              */
-            fixed_point_double_t u_ij[size][size];
-            fixed_point_double_t u_ij_trans[size][size];
-            fixed_point_double_t v_ij_trans[size][size];
+            volatile fixed_point_double_t u_ij[size][size];
+            volatile fixed_point_double_t u_ij_trans[size][size];
+            volatile fixed_point_double_t v_ij_trans[size][size];
 
             memset(u_ij, 0, sizeof(fixed_point_double_t) * size * size);
             memset(u_ij_trans, 0, sizeof(fixed_point_double_t) * size * size);

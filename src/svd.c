@@ -80,7 +80,7 @@ void print_matrix(const volatile fixed_point_double_t *m)
  */
 void mat_mul(volatile fixed_point_double_t *LHS, volatile fixed_point_double_t *RHS, volatile fixed_point_double_t *out)
 {
-    // int32x4_t row_0, row_1, row_2, row_3, out_neon;
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
     // printf("LHS: \n");
     // print_matrix(LHS);

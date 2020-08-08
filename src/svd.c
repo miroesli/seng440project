@@ -19,13 +19,6 @@ static volatile fixed_point_double_t v_trans_prime_1[SIZE][SIZE], v_trans_prime_
 static volatile fixed_point_double_t m_prime_1[SIZE][SIZE], m_prime_2[SIZE][SIZE];
 
 /**
- * Create a table of pointers to the matricies for calculations.
- */
-static volatile fixed_point_double_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
-static volatile fixed_point_double_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
-static volatile fixed_point_double_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
-
-/**
  * Create matricies for internal calculations
  */
 static volatile fixed_point_double_t u_ij[SIZE][SIZE];
@@ -50,6 +43,7 @@ void print_matrix(const fixed_point_double_t *m)
     printf("\n");
 }
 
+// U * U_ij_trans -> u_prime
 static void mat_mul_u_x_u_ij_trans_NEON()
 {
     int32x4_t row_0, row_1, row_2, row_3, out_neon;
@@ -74,7 +68,6 @@ static void mat_mul_u_x_u_ij_trans_NEON()
             out_neon = vaddq_s32(vmulq_n_s32(row_2, u_prime_1[i][2]), out_neon);
             out_neon = vaddq_s32(vmulq_n_s32(row_3, u_prime_1[i][3]), out_neon);
             vst1q_s32((fixed_point_double_t *)&u_prime_2[i][0], out_neon);
-            print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
         }
         else // input == 1
         {
@@ -83,9 +76,139 @@ static void mat_mul_u_x_u_ij_trans_NEON()
             out_neon = vaddq_s32(vmulq_n_s32(row_2, u_prime_2[i][2]), out_neon);
             out_neon = vaddq_s32(vmulq_n_s32(row_3, u_prime_2[i][3]), out_neon);
             vst1q_s32((fixed_point_double_t *)&u_prime_1[i][0], out_neon);
-            print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
         }
     }
+
+    if (input == 0)
+        print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    else
+        print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+}
+
+// U_ij x M -> m_prime_tmp
+static void mat_mul_u_ij_x_m_NEON()
+{
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+
+    // print_matrix((const fixed_point_double_t *)&u_ij_trans[0][0]);
+    // if (input == 0)
+    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+    // else
+    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    if (input == 0)
+    {
+        row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[0][0]);
+        row_1 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[1][0]);
+        row_2 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[2][0]);
+        row_3 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[3][0]);
+    }
+    else // Input == 1
+    {
+        row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[0][0]);
+        row_1 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[1][0]);
+        row_2 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[2][0]);
+        row_3 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[3][0]);
+    }
+
+    for (int i = 0; i < SIZE; i++)
+    {
+
+        out_neon = vmulq_n_s32(row_0, u_ij[i][0]);
+        out_neon = vaddq_s32(vmulq_n_s32(row_1, u_ij[i][1]), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_2, u_ij[i][2]), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_3, u_ij[i][3]), out_neon);
+        vst1q_s32((fixed_point_double_t *)&m_prime_tmp[i][0], out_neon);
+    }
+
+    // if (input == 0)
+    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    // else
+    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+}
+
+// m_prime_tmp * v_ij_trans -> m_prime
+static void mat_mul_m_x_v_ij_trans_NEON()
+{
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+
+    // print_matrix((const fixed_point_double_t *)&u_ij_trans[0][0]);
+    // if (input == 0)
+    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+    // else
+    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    row_0 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[0][0]);
+    row_1 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[1][0]);
+    row_2 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[2][0]);
+    row_3 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[3][0]);
+
+    for (int i = 0; i < SIZE; i++)
+    {
+        out_neon = vmulq_n_s32(row_0, m_prime_tmp[i][0]);
+        out_neon = vaddq_s32(vmulq_n_s32(row_1, m_prime_tmp[i][1]), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_2, m_prime_tmp[i][2]), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_3, m_prime_tmp[i][3]), out_neon);
+        if (input == 0)
+        {
+            vst1q_s32((fixed_point_double_t *)&m_prime_1[i][0], out_neon);
+        }
+        else // input = 1;
+        {
+            vst1q_s32((fixed_point_double_t *)&m_prime_2[i][0], out_neon);
+        }
+    }
+
+    // if (input == 0)
+    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    // else
+    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+}
+
+// v_ij_trans * v_trans -> v_prime
+static void mat_mul_v_ij_trans_x_v_trans_NEON()
+{
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+
+    // print_matrix((const fixed_point_double_t *)&u_ij_trans[0][0]);
+    // if (input == 0)
+    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+    // else
+    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+
+    if (input == 0)
+    {
+        row_0 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[0][0]);
+        row_1 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[1][0]);
+        row_2 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[2][0]);
+        row_3 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[3][0]);
+    }
+    else
+    {
+        row_0 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[0][0]);
+        row_1 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[1][0]);
+        row_2 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[2][0]);
+        row_3 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[3][0]);
+    }
+
+    for (int i = 0; i < SIZE; i++)
+    {
+        out_neon = vmulq_n_s32(row_0, v_ij_trans[i][0]);
+        out_neon = vaddq_s32(vmulq_n_s32(row_1, v_ij_trans[i][1]), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_2, v_ij_trans[i][2]), out_neon);
+        out_neon = vaddq_s32(vmulq_n_s32(row_3, v_ij_trans[i][3]), out_neon);
+        if (input == 0)
+        {
+            vst1q_s32((fixed_point_double_t *)&v_trans_prime_2[i][0], out_neon);
+        }
+        else // input = 1;
+        {
+            vst1q_s32((fixed_point_double_t *)&v_trans_prime_1[i][0], out_neon);
+        }
+    }
+
+    // if (input == 0)
+    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    // else
+    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
 }
 
 static void zero_mats()
@@ -228,10 +351,10 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
             v_ij_trans[j][i] = -sin_theta_r_fixed;
 
             // Do the calculations
-            mat_mul_u_x_u_ij_trans_NEON(); // [U][U_ij_T] = [U']
-            // mat_mul(&u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
-            // mat_mul(&m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']
-            // mat_mul(&v_ij_trans[0][0], v_mats[input], v_mats[output]);      // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
+            mat_mul_u_x_u_ij_trans_NEON();       // [U][U_ij_T] = [U']
+            mat_mul_u_ij_x_m_NEON();             // [U_ij][M] = [M'_tmp]
+            mat_mul_m_x_v_ij_trans_NEON();       // [M_tmp][V_ij_T] = [M']
+            mat_mul_v_ij_trans_x_v_trans_NEON(); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
 
             // swap input and output matricies.
             int tmp = input;

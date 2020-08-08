@@ -35,7 +35,7 @@ void print_matrix(const fixed_point_double_t *m)
  * @param RHS
  * @param out
  */
-void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fixed_point_double_t *out)
+void mat_mul(int size, const fixed_point_double_t *LHS, const fixed_point_double_t *RHS, fixed_point_double_t *out)
 {
     int32x4_t row_0, row_1, row_2, row_3, out_neon;
 

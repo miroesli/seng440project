@@ -53,13 +53,22 @@ void print_matrix(const fixed_point_double_t *m)
 // U * U_ij_trans -> u_prime
 static void mat_mul_u_x_u_ij_trans_NEON()
 {
+    printf("U x U_ij_trans \n");
     int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    print_matrix((const fixed_point_double_t *)&u_ij_trans[0][0]);
     if (input == 0)
+    {
+        printf("Using U = u_prime_1\n");
         print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+    }
     else
+    {
+        printf("Using U = u_prime_2");
         print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    }
+
+    printf("U_ij_trans: \n");
+    print_matrix((const fixed_point_double_t *)&u_ij_trans[0][0]);
 
     row_0 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[0][0]);
     row_1 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[1][0]);
@@ -87,9 +96,15 @@ static void mat_mul_u_x_u_ij_trans_NEON()
     }
 
     if (input == 0)
+    {
+        printf("Output u_prime_2: \n");
         print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    }
     else
+    {
+        printf("Output u_prime_1: \n");
         print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+    }
 }
 
 // U_ij x M -> m_prime_tmp
@@ -277,6 +292,8 @@ void mat_mul(volatile fixed_point_double_t *LHS, volatile fixed_point_double_t *
 void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], floating_point_t v_trans[SIZE][SIZE])
 {
 
+    printf('Start of iteration. input = %d, output = %d\n', input, output);
+
     // Convert the input matricies to fixed point.
     for (int row = 0; row < SIZE; row++)
     {
@@ -367,6 +384,8 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
             int tmp = input;
             input = output;
             output = tmp;
+
+            printf("---- End of Iteration ----\n\n");
         }
     }
 

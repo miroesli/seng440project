@@ -33,21 +33,21 @@ static volatile fixed_point_double_t u_ij_trans[SIZE][SIZE];
 static volatile fixed_point_double_t v_ij_trans[SIZE][SIZE];
 static volatile fixed_point_double_t m_prime_tmp[SIZE][SIZE];
 
-volatile fixed_point_double_t X[N][M] = {
+volatile fixed_point_double_t X[SIZE][SIZE] = {
     {0, 1, 2, 3},
     {4, 5, 6, 7},
     {8, 9, 10, 11},
     {12, 13, 14, 15},
 };
 
-volatile fixed_point_double_t Y[N][M] = {
+volatile fixed_point_double_t Y[SIZE][SIZE] = {
     {0, 1, 2, 3},
     {4, 5, 6, 7},
     {8, 9, 10, 11},
     {12, 13, 14, 15},
 };
 
-volatile fixed_point_double_t OUT[N][M];
+volatile fixed_point_double_t OUT[SIZE][SIZE];
 
 void print_matrix(const fixed_point_double_t *m)
 {
@@ -75,16 +75,16 @@ static void mat_mul_NEON()
     row_2 = vld1q_s32((const fixed_point_double_t *)&Y[2][0]);
     row_3 = vld1q_s32((const fixed_point_double_t *)&Y[3][0]);
 
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < SIZE; i++)
     {
-        out_neon = vmulq_n_s32(Y_row_0, X[i][0]);
+        out_neon = vmulq_n_s32(row_0, X[i][0]);
         out_neon = vaddq_s32(vmulq_n_s32(row_1, X[i][1]), out_neon);
         out_neon = vaddq_s32(vmulq_n_s32(row_2, X[i][2]), out_neon);
         out_neon = vaddq_s32(vmulq_n_s32(row_3, X[i][3]), out_neon);
         vst1q_s32((fixed_point_double_t *)&OUT[i][0], out_neon);
     }
 
-    print_matrix((const fixed_point_double_t *)&OUT[0][0])
+    print_matrix((const fixed_point_double_t *)&OUT[0][0]);
 }
 
 static void zero_mats()

@@ -7,7 +7,7 @@
 #define N 4
 #define M 4
 
-void print_matrix(const fixed_point_t *m)
+void print_matrix(const fixed_point_double_t *m)
 {
     for (int i = 0; i < N; i++)
     {
@@ -21,14 +21,14 @@ void print_matrix(const fixed_point_t *m)
     printf("\n");
 }
 
-volatile fixed_point_t X[N][M] = {
+volatile fixed_point_double_t X[N][M] = {
     {0x1, 0x2, 0x3, 0x4},
     {0x5, 0x6, 0x7, 0x8},
     {0x9, 0xA, 0xB, 0xC},
     {0xD, 0xE, 0xF, 0x0},
 };
 
-volatile fixed_point_t Y[N][M] = {
+volatile fixed_point_double_t Y[N][M] = {
     {0x1, 0x2, 0x3, 0x4},
     {0x5, 0x6, 0x7, 0x8},
     {0x9, 0xA, 0xB, 0xC},
@@ -59,7 +59,7 @@ int main(void)
         vst1q_s32((fixed_point_double_t *)&OUT[i][0], out_neon);
     }
 
-    print_matrix((const fixed_point_t *)&OUT[0][0]);
+    print_matrix((const fixed_point_double_t *)&OUT[0][0]);
 
     exit(0);
 }

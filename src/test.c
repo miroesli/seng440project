@@ -37,6 +37,15 @@ int main()
     // printf("m_x_v_f: %f u*m*v: %f\n", u_x_m_x_v_f, u * m * v);
     // printf("v_x_v_f: %f v*v: %f\n", v_x_v_f, v * v);
 
+    // floating_point_t theta = arctan_lookup_table_old[(uint32_t)(frac)];
+    // fixed_point_t theta_fixed = arctan_lookup_table[(uint32_t)(theta_sum)];
+    // printf("\ntheta float: %f, theta fixed: %d\n", theta, theta_fixed);
+    // fixed_point_t theta2 = convert_to_fixed(theta, SCALE_FACTOR_ARCTAN);
+    // printf("theta fixed: %d\n", theta2);
+    // floating_point_t theta3 = convert_to_floating(theta2, SCALE_FACTOR_ARCTAN);
+    // printf("theta float: %f\n\n", theta3);
+
+
     fixed_point_t theta_sum = arctan_lookup((floating_point_t)0.3);
     fixed_point_t theta_diff = arctan_lookup((floating_point_t)0.4);
     fixed_point_t theta_l = (theta_sum - theta_diff) >> 1;

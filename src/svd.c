@@ -292,8 +292,7 @@ void mat_mul(volatile fixed_point_double_t *LHS, volatile fixed_point_double_t *
 void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], floating_point_t v_trans[SIZE][SIZE])
 {
 
-    printf('Start of iteration. input = %d, output = %d\n', input, output);
-
+    
     // Convert the input matricies to fixed point.
     for (int row = 0; row < SIZE; row++)
     {
@@ -312,6 +311,7 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
     {
         for (int j = i + 1; j < SIZE; j++)
         {
+            printf("Start of iteration. input = %d, output = %d\n", input, output);
             fixed_point_t m_ij = *access(m_mats[input], i, j),
                           m_ji = *access(m_mats[input], j, i),
                           m_ii = *access(m_mats[input], i, i),

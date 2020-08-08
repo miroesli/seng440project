@@ -37,18 +37,27 @@ void print_matrix(const fixed_point_double_t *m)
  */
 void mat_mul(int size, const fixed_point_double_t *LHS, const fixed_point_double_t *RHS, fixed_point_double_t *out)
 {
+    fixed_point_double_t M[4][4];
     int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    printf("LHS: \n");
-    print_matrix(LHS);
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            M[i][j] = *access(RHS, 4, i, j);
+        }
+    }
+
+    // printf("LHS: \n");
+    // print_matrix(LHS);
 
     printf("RHS: \n");
     print_matrix(RHS);
 
-    row_0 = vld1q_s32(RHS);
-    row_1 = vld1q_s32(RHS + 4);
-    row_2 = vld1q_s32(RHS + 8);
-    row_3 = vld1q_s32(RHS + 12);
+    row_0 = vld1q_s32((const fixed_point_double_t *)&M[0][0]);
+    // row_1 = vld1q_s32(RHS + 4);
+    // row_2 = vld1q_s32(RHS + 8);
+    // row_3 = vld1q_s32(RHS + 12);
 
     int32_t test[4];
     vst1q_s32((int32_t *)test[0], row_0);
@@ -71,20 +80,20 @@ void mat_mul(int size, const fixed_point_double_t *LHS, const fixed_point_double
     // printf("NEON result: \n");
     // print_matrix(out);
 
-    // for (int i = 0; i < size; i++)
-    // {
-    //     for (int j = 0; j < size; j++)
-    //     {
-    //         *access(out, size, i, j) = 0;
-    //         for (int k = 0; k < size; k++)
-    //         {
-    //             *access(out, size, i, j) += truncate(
-    //                 fixed_point_mul(
-    //                     *access(LHS, size, i, k),
-    //                     *access(RHS, size, k, j)));
-    //         }
-    //     }
-    // }
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            *access(out, size, i, j) = 0;
+            for (int k = 0; k < size; k++)
+            {
+                *access(out, size, i, j) += truncate(
+                    fixed_point_mul(
+                        *access(LHS, size, i, k),
+                        *access(RHS, size, k, j)));
+            }
+        }
+    }
     printf("OUR result: \n");
     print_matrix(out);
 }

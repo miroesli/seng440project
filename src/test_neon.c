@@ -42,8 +42,8 @@ int main(void)
     int i, j;
     int32x4_t Y_row_0, Y_row_1, Y_row_2, Y_row_3, out_neon;
 
-    print_matrix((const fixed_point_t *)&X[0][0]);
-    print_matrix((const fixed_point_t *)&Y[0][0]);
+    print_matrix((const fixed_point_double_t *)&X[0][0]);
+    print_matrix((const fixed_point_double_t *)&Y[0][0]);
 
     Y_row_0 = vld1q_s32((const fixed_point_double_t *)&Y[0][0]);
     Y_row_1 = vld1q_s32((const fixed_point_double_t *)&Y[1][0]);

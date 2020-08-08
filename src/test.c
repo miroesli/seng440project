@@ -2,9 +2,9 @@
 #include "svd.h"
 #include "svd_math.h"
 #include <assert.h>
-#include "arctan_lookup_table.h"
-#include "sin_lookup_table.h"
-#include "cos_lookup_table.h"
+#include "tables/arctan_lookup_table.h"
+#include "tables/sin_lookup_table.h"
+#include "tables/cos_lookup_table.h"
 #include <math.h>
 
 floating_point_t m[4][4] = {

@@ -5,8 +5,8 @@
 #include <math.h>
 
 typedef float floating_point_t;
-typedef int32_t fixed_point_t;
-typedef int64_t fixed_point_double_t;
+typedef int16_t fixed_point_t;
+typedef int32_t fixed_point_double_t;
 
 typedef fixed_point_t fixed_point_u_t;
 typedef fixed_point_t fixed_point_v_t;
@@ -20,9 +20,9 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 
 #include "config.h"
 // #include "tables.h"
-#include "arctan_lookup_table.h"
-#include "sin_lookup_table.h"
-#include "cos_lookup_table.h"
+#include "tables/arctan_lookup_table.h"
+#include "tables/sin_lookup_table.h"
+#include "tables/cos_lookup_table.h"
 
 // Table definitions
 // exclusive end
@@ -31,13 +31,13 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 #define SINCOS_RANGE M_PI
 // Scale Factors
 // TODO check if factor u can be used instead?
-#define SCALE_FACTOR_ARCTAN 30
-#define SCALE_FACTOR_SINCOS 29
+#define SCALE_FACTOR_ARCTAN 13
+#define SCALE_FACTOR_SINCOS 13
 #define SCALE_FACTOR_U SCALE_FACTOR_SINCOS
 #define SCALE_FACTOR_U_DP 2 * SCALE_FACTOR_U + 1
 #define SCALE_FACTOR_V SCALE_FACTOR_SINCOS
 #define SCALE_FACTOR_V_DP 2 * SCALE_FACTOR_V + 1
-#define SCALE_FACTOR_M 17
+#define SCALE_FACTOR_M 7
 #define SCALE_FACTOR_M_tmp_DP SCALE_FACTOR_M + SCALE_FACTOR_V + 1
 #define SCALE_FACTOR_M_tmp SCALE_FACTOR_M_tmp_DP - (sizeof(fixed_point_double_t) - sizeof(fixed_point_t)) * 8
 #define SCALE_FACTOR_M_DP SCALE_FACTOR_M_tmp + SCALE_FACTOR_V + 1

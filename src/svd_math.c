@@ -25,7 +25,7 @@ fixed_point_t convert_to_fixed(floating_point_t floating, size_t scale_factor)
  */
 fixed_point_u_dp_t fixed_point_mul(fixed_point_u_t LHS, fixed_point_u_t RHS)
 {
-    return (fixed_point_double_t)LHS * (fixed_point_double_t)RHS * 8;
+    return (fixed_point_double_t)LHS * (fixed_point_double_t)RHS * 2;
 }
 
 /**
@@ -44,7 +44,7 @@ fixed_point_double_t fixed_point_div(fixed_point_t LHS, fixed_point_t RHS)
 
         return sign_LHS * sigh_RHS == 1 ? 2147483647 : -2147483648;
     }
-    return ((fixed_point_double_t)LHS << 32) / RHS;
+    return ((fixed_point_double_t)LHS << 14) / RHS;
 }
 
 /**
@@ -55,7 +55,7 @@ fixed_point_double_t fixed_point_div(fixed_point_t LHS, fixed_point_t RHS)
  */
 fixed_point_t truncate(fixed_point_double_t x)
 {
-    return x >> 32;
+    return x >> 14;
 }
 
 /**
@@ -84,12 +84,12 @@ fixed_point_t arctan_lookup(fixed_point_double_t x)
 {
     int sign_x = x < 0 ? -1 : 1;
     fixed_point_double_t abs_x = x * sign_x;
-    fixed_point_double_t limit = (fixed_point_double_t)ARCTAN_RANGE << 32;
+    fixed_point_double_t limit = (fixed_point_double_t)ARCTAN_RANGE << 14;
 
     if (abs_x > limit)
         return convert_to_fixed(M_PI / 2.0, SCALE_FACTOR_ARCTAN) * sign_x;
 
-    size_t idx = (abs_x * VALUES_IN_RANGE / ARCTAN_RANGE) >> 32;
+    size_t idx = (abs_x * VALUES_IN_RANGE / ARCTAN_RANGE) >> 14;
     return arctan_lookup_table[idx] * sign_x;
 }
 

@@ -6,7 +6,7 @@
 #include "svd.h"
 #include "arm_neon.h"
 
-static fixed_point_double_t *access(fixed_point_double_t *arr, size_t size, size_t row, size_t col)
+static inline fixed_point_double_t *access(fixed_point_double_t *arr, size_t size, size_t row, size_t col)
 {
     return arr + size * row + col;
 }
@@ -21,7 +21,7 @@ static fixed_point_double_t *access(fixed_point_double_t *arr, size_t size, size
  * @param RHS
  * @param out
  */
-void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fixed_point_double_t *out)
+static inline void mat_mul(int size, fixed_point_double_t *LHS, fixed_point_double_t *RHS, fixed_point_double_t *out)
 {
     int32x4_t row_0, row_1, row_2, row_3, out_neon;
 

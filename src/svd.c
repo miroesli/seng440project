@@ -13,14 +13,14 @@ static inline fixed_point_double_t *access(fixed_point_double_t *arr, size_t siz
 
 void print_matrix(const fixed_point_double_t *m)
 {
-    for (int i = 0; i < N; i++)
+    for (int i = 0; i < 4; i++)
     {
         printf("[");
-        for (int j = 0; j < M - 1; j++)
+        for (int j = 0; j < 4 - 1; j++)
         {
-            printf(" %d", *(m + i * N + j));
+            printf(" %d", *(m + i * 4 + j));
         }
-        printf(" %d ]\n", *(m + i * N + M - 1));
+        printf(" %d ]\n", *(m + i * 4 + 4 - 1));
     }
     printf("\n");
 }

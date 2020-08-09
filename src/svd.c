@@ -63,7 +63,7 @@ static void mat_mul_u_x_u_ij_trans_NEON()
     }
     else
     {
-        printf("Using U = u_prime_2");
+        printf("Using U = u_prime_2\n");
         print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
     }
 
@@ -110,13 +110,21 @@ static void mat_mul_u_x_u_ij_trans_NEON()
 // U_ij x M -> m_prime_tmp
 static void mat_mul_u_ij_x_m_NEON()
 {
+    printf("U_ij x M \n");
     int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    // print_matrix((const fixed_point_double_t *)&u_ij_trans[0][0]);
-    // if (input == 0)
-    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
-    // else
-    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    printf("U_ij: \n");
+    print_matrix((const fixed_point_double_t *)&u_ij[0][0]);
+    if (input == 0)
+    {
+        printf("Using M = m_prime_1\n");
+        print_matrix((const fixed_point_double_t *)&m_prime_1[0][0]);
+    }
+    else
+    {
+        printf("Using M = m_prime_2\n");
+        print_matrix((const fixed_point_double_t *)&m_prime_2[0][0]);
+    }
     if (input == 0)
     {
         row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[0][0]);
@@ -142,10 +150,8 @@ static void mat_mul_u_ij_x_m_NEON()
         vst1q_s32((fixed_point_double_t *)&m_prime_tmp[i][0], out_neon);
     }
 
-    // if (input == 0)
-    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
-    // else
-    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+    printf("m_prime_tmp:\n");
+    print_matrix((const fixed_point_double_t *)&m_prime_tmp[0][0]);
 }
 
 // m_prime_tmp * v_ij_trans -> m_prime
@@ -292,7 +298,6 @@ void mat_mul(volatile fixed_point_double_t *LHS, volatile fixed_point_double_t *
 void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], floating_point_t v_trans[SIZE][SIZE])
 {
 
-    
     // Convert the input matricies to fixed point.
     for (int row = 0; row < SIZE; row++)
     {
@@ -364,6 +369,11 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
             u_ij_trans[j][j] = cos_theta_l_fixed;
             u_ij_trans[i][j] = sin_theta_l_fixed;
             u_ij_trans[j][i] = -sin_theta_l_fixed;
+
+            printf("u_ij_trans[%d][%d]: %d", i, i, u_ij_trans[i][i]);
+            printf("u_ij_trans[%d][%d]: %d", j, j, u_ij_trans[j][i]);
+            printf("u_ij_trans[%d][%d]: %d", i, j, u_ij_trans[i][i]);
+            printf("u_ij_trans[%d][%d]: %d", j, i, u_ij_trans[i][i]);
 
             /**
              * V_ij_Trans = [  cos(θr) sin(θr) ]

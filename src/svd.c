@@ -35,7 +35,7 @@ static int input;
  * fixed_point_double_t. We to truncate the least significant bits to turn
  * the result into a fixed_point_t for the next round of computation.
  * 
- * Let X deonote the matrix on the LHS, and Y deonte the matrix on the RHS.
+ * Let X denote the matrix on the LHS, and Y deonte the matrix on the RHS.
  * Let M_in denote the the nth element in the ith row of a matrix M.
  * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
  * let B denote the number of bits to shift
@@ -87,7 +87,7 @@ static void mat_mul_u_x_u_ij_trans_NEON()
  * fixed_point_double_t. We to truncate the least significant bits to turn
  * the result into a fixed_point_t for the next round of computation.
  * 
- * Let X deonote the matrix on the LHS, and Y deonte the matrix on the RHS.
+ * Let X denote the matrix on the LHS, and Y deonte the matrix on the RHS.
  * Let M_in denote the the nth element in the ith row of a matrix M.
  * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
  * let B denote the number of bits to shift
@@ -136,7 +136,7 @@ static void mat_mul_u_ij_x_m_NEON()
  * fixed_point_double_t. We to truncate the least significant bits to turn
  * the result into a fixed_point_t for the next round of computation.
  * 
- * Let X deonote the matrix on the LHS, and Y deonte the matrix on the RHS.
+ * Let X denote the matrix on the LHS, and Y deonte the matrix on the RHS.
  * Let M_in denote the the nth element in the ith row of a matrix M.
  * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
  * let B denote the number of bits to shift
@@ -181,7 +181,7 @@ static void mat_mul_m_x_v_ij_trans_NEON()
  * fixed_point_double_t. We to truncate the least significant bits to turn
  * the result into a fixed_point_t for the next round of computation.
  * 
- * Let X deonote the matrix on the LHS, and Y deonte the matrix on the RHS.
+ * Let X denote the matrix on the LHS, and Y deonte the matrix on the RHS.
  * Let M_in denote the the nth element in the ith row of a matrix M.
  * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
  * let B denote the number of bits to shift

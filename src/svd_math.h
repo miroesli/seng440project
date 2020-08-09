@@ -34,13 +34,8 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 #define SCALE_FACTOR_ARCTAN 13
 #define SCALE_FACTOR_SINCOS 13
 #define SCALE_FACTOR_U SCALE_FACTOR_SINCOS
-#define SCALE_FACTOR_U_DP 2 * SCALE_FACTOR_U + 1
 #define SCALE_FACTOR_V SCALE_FACTOR_SINCOS
-#define SCALE_FACTOR_V_DP 2 * SCALE_FACTOR_V + 1
 #define SCALE_FACTOR_M 6
-#define SCALE_FACTOR_M_tmp_DP SCALE_FACTOR_M + SCALE_FACTOR_V + 1
-#define SCALE_FACTOR_M_tmp SCALE_FACTOR_M_tmp_DP - (sizeof(fixed_point_double_t) - sizeof(fixed_point_t)) * 8
-#define SCALE_FACTOR_M_DP SCALE_FACTOR_M_tmp + SCALE_FACTOR_V + 1
 #define SHIFT_AMOUNT 13
 
 fixed_point_t convert_to_fixed(floating_point_t f, size_t scale_factor);

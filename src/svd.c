@@ -182,12 +182,12 @@ static void mat_mul_m_x_v_ij_trans_NEON()
         if (input == 0)
         {
             out_neon = vshrq_n_s32(out_neon, 14);
-            vst1q_s32((fixed_point_double_t *)&m_prime_1[i][0], out_neon);
+            vst1q_s32((fixed_point_double_t *)&m_prime_2[i][0], out_neon);
         }
         else // input = 1;
         {
             out_neon = vshrq_n_s32(out_neon, 14);
-            vst1q_s32((fixed_point_double_t *)&m_prime_2[i][0], out_neon);
+            vst1q_s32((fixed_point_double_t *)&m_prime_1[i][0], out_neon);
         }
     }
     if (input == 0)

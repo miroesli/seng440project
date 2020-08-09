@@ -186,7 +186,7 @@ static void mat_mul_m_x_v_ij_trans_NEON()
  * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
  * let B denote the number of bits to shift
  *  
- * Each row of the square matrix is caluclated as such
+ * Each row of the square matrix is calculated as such
  * 
  * X_i = (X_i0 * Y_0 + X_i1 * Y_1 + X_i2 * Y_2 + X_i3 * Y_3) >> B;
  * 

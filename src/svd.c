@@ -62,20 +62,20 @@ static void mat_mul_u_x_u_ij_trans_NEON()
         // Prevent copies by switching between matricies.
         if (input == 0)
         {
-            out_neon = vmulq_n_s32(row_0, u_prime_1[i][0]);                      // X_i0 * Y_0
-            out_neon = vaddq_s32(vmulq_n_s32(row_1, u_prime_1[i][1]), out_neon); // X_i1 * Y_1
-            out_neon = vaddq_s32(vmulq_n_s32(row_2, u_prime_1[i][2]), out_neon); // X_i2 * Y_2
-            out_neon = vaddq_s32(vmulq_n_s32(row_3, u_prime_1[i][3]), out_neon); // X_i3 * Y_3
-            out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);                      // X_i >> B
+            out_neon = vmulq_n_s32(row_0, u_prime_1[i][0]);            // X_i0 * Y_0
+            out_neon = vmulaq_n_s32(out_neon, row_1, u_prime_1[i][1]); // X_i1 * Y_1
+            out_neon = vmulaq_n_s32(out_neon, row_2, u_prime_1[i][2]); // X_i2 * Y_2
+            out_neon = vmulaq_n_s32(out_neon, row_3, u_prime_1[i][3]); // X_i3 * Y_3
+            out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);            // X_i >> B
             vst1q_s32((fixed_point_double_t *)&u_prime_2[i][0], out_neon);
         }
         else // input == 1
         {
-            out_neon = vmulq_n_s32(row_0, u_prime_2[i][0]);                      // X_i0 * Y_0
-            out_neon = vaddq_s32(vmulq_n_s32(row_1, u_prime_2[i][1]), out_neon); // X_i1 * Y_1
-            out_neon = vaddq_s32(vmulq_n_s32(row_2, u_prime_2[i][2]), out_neon); // X_i2 * Y_2
-            out_neon = vaddq_s32(vmulq_n_s32(row_3, u_prime_2[i][3]), out_neon); // X_i3 * Y_3
-            out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);                      // X_i >> B
+            out_neon = vmulq_n_s32(row_0, u_prime_2[i][0]);            // X_i0 * Y_0
+            out_neon = vmulaq_n_s32(out_neon, row_1, u_prime_2[i][1]); // X_i1 * Y_1
+            out_neon = vmulaq_n_s32(out_neon, row_2, u_prime_2[i][2]); // X_i2 * Y_2
+            out_neon = vmulaq_n_s32(out_neon, row_3, u_prime_2[i][3]); // X_i3 * Y_3
+            out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);            // X_i >> B
             vst1q_s32((fixed_point_double_t *)&u_prime_1[i][0], out_neon);
         }
     }
@@ -121,11 +121,11 @@ static void mat_mul_u_ij_x_m_NEON()
     for (int i = 0; i < SIZE; i++)
     {
 
-        out_neon = vmulq_n_s32(row_0, u_ij[i][0]);                      // X_i0 * Y_0
-        out_neon = vaddq_s32(vmulq_n_s32(row_1, u_ij[i][1]), out_neon); // X_i1 * Y_1
-        out_neon = vaddq_s32(vmulq_n_s32(row_2, u_ij[i][2]), out_neon); // X_i2 * Y_2
-        out_neon = vaddq_s32(vmulq_n_s32(row_3, u_ij[i][3]), out_neon); // X_i3 * Y_3
-        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);                 // X_i >> B
+        out_neon = vmulq_n_s32(row_0, u_ij[i][0]);            // X_i0 * Y_0
+        out_neon = vmulaq_n_s32(out_neon, row_1, u_ij[i][1]); // X_i1 * Y_1
+        out_neon = vmulaq_n_s32(out_neon, row_2, u_ij[i][2]); // X_i2 * Y_2
+        out_neon = vmulaq_n_s32(out_neon, row_3, u_ij[i][3]); // X_i3 * Y_3
+        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);       // X_i >> B
         vst1q_s32((fixed_point_double_t *)&m_prime_tmp[i][0], out_neon);
     }
 }
@@ -159,11 +159,11 @@ static void mat_mul_m_x_v_ij_trans_NEON()
 
     for (int i = 0; i < SIZE; i++)
     {
-        out_neon = vmulq_n_s32(row_0, m_prime_tmp[i][0]);                      // X_i0 * Y_0
-        out_neon = vaddq_s32(vmulq_n_s32(row_1, m_prime_tmp[i][1]), out_neon); // X_i1 * Y_1
-        out_neon = vaddq_s32(vmulq_n_s32(row_2, m_prime_tmp[i][2]), out_neon); // X_i2 * Y_2
-        out_neon = vaddq_s32(vmulq_n_s32(row_3, m_prime_tmp[i][3]), out_neon); // X_i3 * Y_3
-        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);                        // X_i >> B
+        out_neon = vmulq_n_s32(row_0, m_prime_tmp[i][0]);            // X_i0 * Y_0
+        out_neon = vmulaq_n_s32(out_neon, row_1, m_prime_tmp[i][1]); // X_i1 * Y_1
+        out_neon = vmulaq_n_s32(out_neon, row_2, m_prime_tmp[i][2]); // X_i2 * Y_2
+        out_neon = vmulaq_n_s32(out_neon, row_3, m_prime_tmp[i][3]); // X_i3 * Y_3
+        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);              // X_i >> B
         if (input == 0)
         {
             vst1q_s32((fixed_point_double_t *)&m_prime_2[i][0], out_neon);
@@ -215,11 +215,11 @@ static void mat_mul_v_ij_trans_x_v_trans_NEON()
 
     for (int i = 0; i < SIZE; i++)
     {
-        out_neon = vmulq_n_s32(row_0, v_ij_trans[i][0]);                      // X_i0 * Y_0
-        out_neon = vaddq_s32(vmulq_n_s32(row_1, v_ij_trans[i][1]), out_neon); // X_i1 * Y_1
-        out_neon = vaddq_s32(vmulq_n_s32(row_2, v_ij_trans[i][2]), out_neon); // X_i2 * Y_2
-        out_neon = vaddq_s32(vmulq_n_s32(row_3, v_ij_trans[i][3]), out_neon); // X_i3 * Y_3
-        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);                       // X_i >> B
+        out_neon = vmulq_n_s32(row_0, v_ij_trans[i][0]);            // X_i0 * Y_0
+        out_neon = vmulaq_n_s32(out_neon, row_1, v_ij_trans[i][1]); // X_i1 * Y_1
+        out_neon = vmulaq_n_s32(out_neon, row_2, v_ij_trans[i][2]); // X_i2 * Y_2
+        out_neon = vmulaq_n_s32(out_neon, row_3, v_ij_trans[i][3]); // X_i3 * Y_3
+        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);             // X_i >> B
         if (input == 0)
         {
             vst1q_s32((fixed_point_double_t *)&v_trans_prime_2[i][0], out_neon);

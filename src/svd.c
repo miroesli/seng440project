@@ -252,45 +252,6 @@ static void zero_mats()
     }
 }
 
-static inline volatile fixed_point_double_t *access(volatile fixed_point_double_t *arr, size_t row, size_t col)
-{
-    return arr + SIZE * row + col;
-}
-
-/**
- * @brief Perfoms a fixed point matrix multiplication
- *
- * Result is placed in out[][]
- *
- * @param size
- * @param LHS
- * @param RHS
- * @param out
- */
-void mat_mul(volatile fixed_point_double_t *LHS, volatile fixed_point_double_t *RHS, volatile fixed_point_double_t *out)
-{
-
-    // printf("NEON result: \n");
-    // print_matrix(out);
-
-    for (int i = 0; i < SIZE; i++)
-    {
-        for (int j = 0; j < SIZE; j++)
-        {
-            *access(out, i, j) = 0;
-            for (int k = 0; k < SIZE; k++)
-            {
-                *access(out, i, j) += truncate(
-                    fixed_point_mul(
-                        *access(LHS, i, k),
-                        *access(RHS, k, j)));
-            }
-        }
-    }
-    // printf("OUR result: \n");
-    // print_matrix(out);
-}
-
 /**
  * @brief Performes a single sweep of the svd algorithm
  *
@@ -303,9 +264,9 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
     {
         for (int col = 0; col < SIZE; col++)
         {
-            *access(m_mats[input], row, col) = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
-            *access(u_mats[input], row, col) = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
-            *access(v_mats[input], row, col) = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
+            m_prime_1[row][col] = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
+            u_prime_1[row][col] = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
+            v_trans_prime_1[row][col] = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
         }
     }
 
@@ -317,10 +278,22 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
         for (int j = i + 1; j < SIZE; j++)
         {
             printf("Start of iteration. input = %d, output = %d\n", input, output);
-            fixed_point_t m_ij = *access(m_mats[input], i, j),
-                          m_ji = *access(m_mats[input], j, i),
-                          m_ii = *access(m_mats[input], i, i),
-                          m_jj = *access(m_mats[input], j, j);
+            fixed_point_t m_ij, m_ji, m_ii, m_jj;
+
+            if (input == 0)
+            {
+                m_ij = m_prime_1[i][j];
+                m_ji = m_prime_1[j][i];
+                m_ii = m_prime_1[i][i];
+                m_jj = m_prime_1[j][j];
+            }
+            else
+            {
+                m_ij = m_prime_2[i][j];
+                m_ji = m_prime_2[j][i];
+                m_ii = m_prime_2[i][i];
+                m_jj = m_prime_2[j][j];
+            }
 
             /**
              * Do all of the angle calculations
@@ -370,10 +343,10 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
             u_ij_trans[i][j] = sin_theta_l_fixed;
             u_ij_trans[j][i] = -sin_theta_l_fixed;
 
-            printf("u_ij_trans[%d][%d]: %d", i, i, u_ij_trans[i][i]);
-            printf("u_ij_trans[%d][%d]: %d", j, j, u_ij_trans[j][i]);
-            printf("u_ij_trans[%d][%d]: %d", i, j, u_ij_trans[i][i]);
-            printf("u_ij_trans[%d][%d]: %d", j, i, u_ij_trans[i][i]);
+            printf("u_ij_trans[%d][%d]: %d\n", i, i, u_ij_trans[i][i]);
+            printf("u_ij_trans[%d][%d]: %d\n", j, j, u_ij_trans[j][i]);
+            printf("u_ij_trans[%d][%d]: %d\n", i, j, u_ij_trans[i][i]);
+            printf("u_ij_trans[%d][%d]: %d\n", j, i, u_ij_trans[i][i]);
 
             /**
              * V_ij_Trans = [  cos(θr) sin(θr) ]
@@ -404,9 +377,18 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
     {
         for (int col = 0; col < SIZE; col++)
         {
-            u[row][col] = convert_to_floating(*access(u_mats[input], row, col), SCALE_FACTOR_U);
-            v_trans[row][col] = convert_to_floating(*access(v_mats[input], row, col), SCALE_FACTOR_V);
-            m[row][col] = convert_to_floating(*access(m_mats[input], row, col), SCALE_FACTOR_M);
+            if (input == 0)
+            {
+                u[row][col] = convert_to_floating(u_prime_1[row][col], SCALE_FACTOR_U);
+                v_trans[row][col] = convert_to_floating(v_trans_prime_1[row][col], SCALE_FACTOR_V);
+                m[row][col] = convert_to_floating(m_prime_1[row][col], SCALE_FACTOR_M);
+            }
+            else
+            {
+                u[row][col] = convert_to_floating(u_prime_2[row][col], SCALE_FACTOR_U);
+                v_trans[row][col] = convert_to_floating(v_trans_prime_2[row][col], SCALE_FACTOR_V);
+                m[row][col] = convert_to_floating(m_prime_2[row][col], SCALE_FACTOR_M);
+            }
         }
     }
 }

@@ -41,6 +41,7 @@ typedef fixed_point_double_t fixed_point_m_tmp_dp_t;
 #define SCALE_FACTOR_M_tmp_DP SCALE_FACTOR_M + SCALE_FACTOR_V + 1
 #define SCALE_FACTOR_M_tmp SCALE_FACTOR_M_tmp_DP - (sizeof(fixed_point_double_t) - sizeof(fixed_point_t)) * 8
 #define SCALE_FACTOR_M_DP SCALE_FACTOR_M_tmp + SCALE_FACTOR_V + 1
+#define SHIFT_AMOUNT 13
 
 fixed_point_t convert_to_fixed(floating_point_t f, size_t scale_factor);
 fixed_point_double_t fixed_point_mul(fixed_point_t, fixed_point_t);

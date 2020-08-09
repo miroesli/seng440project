@@ -157,13 +157,14 @@ static void mat_mul_u_ij_x_m_NEON()
 // m_prime_tmp * v_ij_trans -> m_prime
 static void mat_mul_m_x_v_ij_trans_NEON()
 {
+    printf("M * v_ij_t -> m prime\n");
     int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    // print_matrix((const fixed_point_double_t *)&u_ij_trans[0][0]);
-    // if (input == 0)
-    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
-    // else
-    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
+    printf("M_tmp: \n");
+    print_matrix((const fixed_point_double_t *)&m_prime_tmp[0][0]);
+    printf("V_ij_trans: \n");
+    print_matrix((const fixed_point_double_t *)&v_ij_trans[0][0]);
+
     row_0 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[0][0]);
     row_1 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[1][0]);
     row_2 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[2][0]);
@@ -184,11 +185,16 @@ static void mat_mul_m_x_v_ij_trans_NEON()
             vst1q_s32((fixed_point_double_t *)&m_prime_2[i][0], out_neon);
         }
     }
-
-    // if (input == 0)
-    //     print_matrix((const fixed_point_double_t *)&u_prime_2[0][0]);
-    // else
-    //     print_matrix((const fixed_point_double_t *)&u_prime_1[0][0]);
+    if (input == 0)
+    {
+        printf("Output m_prime_2: \n");
+        print_matrix((const fixed_point_double_t *)&m_prime_2[0][0]);
+    }
+    else
+    {
+        printf("Output m_prime_1: \n");
+        print_matrix((const fixed_point_double_t *)&m_prime_1[0][0]);
+    }
 }
 
 // v_ij_trans * v_trans -> v_prime

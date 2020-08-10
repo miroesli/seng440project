@@ -36,14 +36,29 @@ volatile fixed_point_double_t Y[N][M] = {
 };
 
 volatile fixed_point_double_t OUT[N][M];
+volatile fixed_point_double_t OUT_NEON[N][M];
 
-int main(void)
+void matrix_multiply(
+    volatile fixed_point_double_t LHS[N][M],
+    volatile fixed_point_double_t RHS[N][M],
+    volatile fixed_point_double_t RESULT[N][M])
 {
-    int i, j;
-    int32x4_t Y_row_0, Y_row_1, Y_row_2, Y_row_3, out_neon;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            RESULT[i][j] = 0;
+            for (int k = 0; k < 4; k++)
+            {
+                RESULT[i][j] += LHS[i][k] + RHS[k][j];
+            }
+        }
+    }
+}
 
-    print_matrix((const fixed_point_double_t *)&X[0][0]);
-    print_matrix((const fixed_point_double_t *)&Y[0][0]);
+void matrix_multiply_NEON(volatile fixed_point_double_t LHS[N][M], volatile fixed_point_double_t RHS[N][M], volatile fixed_point_double_t RESULT[N][M])
+{
+    int32x4_t Y_row_0, Y_row_1, Y_row_2, Y_row_3, out_neon;
 
     Y_row_0 = vld1q_s32((const fixed_point_double_t *)&Y[0][0]);
     Y_row_1 = vld1q_s32((const fixed_point_double_t *)&Y[1][0]);
@@ -56,10 +71,18 @@ int main(void)
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_1, X[i][1]), out_neon);
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_2, X[i][2]), out_neon);
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_3, X[i][3]), out_neon);
-        vst1q_s32((fixed_point_double_t *)&OUT[i][0], out_neon);
+        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);
+        vst1q_s32((fixed_point_double_t *)&RESULT[i][0], out_neon);
     }
+}
 
+int main(void)
+{
+
+    matrix_multiply(X, Y, OUT);
+    matrix_multiply_NEON(X, Y, OUT_NEON);
     print_matrix((const fixed_point_double_t *)&OUT[0][0]);
+    print_matrix((const fixed_point_double_t *)&OUT_NEON[0][0]);
 
     exit(0);
 }

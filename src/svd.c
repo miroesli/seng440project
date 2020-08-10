@@ -4,7 +4,7 @@
  *
  */
 #include "svd.h"
-#include "arm_neon.h"
+// #include "arm_neon.h"
 
 /**
  * Create matricies for claculations.
@@ -49,36 +49,36 @@ static int input;
  */
 static void mat_mul_u_x_u_ij_trans_NEON()
 {
-    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+    // int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    // Read the rows of u_ij_trans
-    row_0 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[0][0]); // Y_0
-    row_1 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[1][0]); // Y_1
-    row_2 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[2][0]); // Y_2
-    row_3 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[3][0]); // Y_3
+    // // Read the rows of u_ij_trans
+    // row_0 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[0][0]); // Y_0
+    // row_1 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[1][0]); // Y_1
+    // row_2 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[2][0]); // Y_2
+    // row_3 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[3][0]); // Y_3
 
-    for (int i = 0; i < SIZE; i++)
-    {
-        // Prevent copies by switching between matricies.
-        if (input == 0)
-        {
-            out_neon = vmulq_n_s32(row_0, u_prime_1[i][0]);           // X_i0 * Y_0
-            out_neon = vmlaq_n_s32(out_neon, row_1, u_prime_1[i][1]); // X_i1 * Y_1
-            out_neon = vmlaq_n_s32(out_neon, row_2, u_prime_1[i][2]); // X_i2 * Y_2
-            out_neon = vmlaq_n_s32(out_neon, row_3, u_prime_1[i][3]); // X_i3 * Y_3
-            out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);           // X_i >> B
-            vst1q_s32((fixed_point_double_t *)&u_prime_2[i][0], out_neon);
-        }
-        else // input == 1
-        {
-            out_neon = vmulq_n_s32(row_0, u_prime_2[i][0]);           // X_i0 * Y_0
-            out_neon = vmlaq_n_s32(out_neon, row_1, u_prime_2[i][1]); // X_i1 * Y_1
-            out_neon = vmlaq_n_s32(out_neon, row_2, u_prime_2[i][2]); // X_i2 * Y_2
-            out_neon = vmlaq_n_s32(out_neon, row_3, u_prime_2[i][3]); // X_i3 * Y_3
-            out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);           // X_i >> B
-            vst1q_s32((fixed_point_double_t *)&u_prime_1[i][0], out_neon);
-        }
-    }
+    // for (int i = 0; i < SIZE; i++)
+    // {
+    //     // Prevent copies by switching between matricies.
+    //     if (input == 0)
+    //     {
+    //         out_neon = vmulq_n_s32(row_0, u_prime_1[i][0]);           // X_i0 * Y_0
+    //         out_neon = vmlaq_n_s32(out_neon, row_1, u_prime_1[i][1]); // X_i1 * Y_1
+    //         out_neon = vmlaq_n_s32(out_neon, row_2, u_prime_1[i][2]); // X_i2 * Y_2
+    //         out_neon = vmlaq_n_s32(out_neon, row_3, u_prime_1[i][3]); // X_i3 * Y_3
+    //         out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);           // X_i >> B
+    //         vst1q_s32((fixed_point_double_t *)&u_prime_2[i][0], out_neon);
+    //     }
+    //     else // input == 1
+    //     {
+    //         out_neon = vmulq_n_s32(row_0, u_prime_2[i][0]);           // X_i0 * Y_0
+    //         out_neon = vmlaq_n_s32(out_neon, row_1, u_prime_2[i][1]); // X_i1 * Y_1
+    //         out_neon = vmlaq_n_s32(out_neon, row_2, u_prime_2[i][2]); // X_i2 * Y_2
+    //         out_neon = vmlaq_n_s32(out_neon, row_3, u_prime_2[i][3]); // X_i3 * Y_3
+    //         out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);           // X_i >> B
+    //         vst1q_s32((fixed_point_double_t *)&u_prime_1[i][0], out_neon);
+    //     }
+    // }
 }
 
 /**
@@ -101,33 +101,33 @@ static void mat_mul_u_x_u_ij_trans_NEON()
  */
 static void mat_mul_u_ij_x_m_NEON()
 {
-    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+    // int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    if (input == 0)
-    {
-        row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[0][0]); // Y_0
-        row_1 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[1][0]); // Y_1
-        row_2 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[2][0]); // Y_2
-        row_3 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[3][0]); // Y_3
-    }
-    else // Input == 1
-    {
-        row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[0][0]); // Y_0
-        row_1 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[1][0]); // Y_1
-        row_2 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[2][0]); // Y_2
-        row_3 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[3][0]); // Y_3
-    }
+    // if (input == 0)
+    // {
+    //     row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[0][0]); // Y_0
+    //     row_1 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[1][0]); // Y_1
+    //     row_2 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[2][0]); // Y_2
+    //     row_3 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[3][0]); // Y_3
+    // }
+    // else // Input == 1
+    // {
+    //     row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[0][0]); // Y_0
+    //     row_1 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[1][0]); // Y_1
+    //     row_2 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[2][0]); // Y_2
+    //     row_3 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[3][0]); // Y_3
+    // }
 
-    for (int i = 0; i < SIZE; i++)
-    {
+    // for (int i = 0; i < SIZE; i++)
+    // {
 
-        out_neon = vmulq_n_s32(row_0, u_ij[i][0]);           // X_i0 * Y_0
-        out_neon = vmlaq_n_s32(out_neon, row_1, u_ij[i][1]); // X_i1 * Y_1
-        out_neon = vmlaq_n_s32(out_neon, row_2, u_ij[i][2]); // X_i2 * Y_2
-        out_neon = vmlaq_n_s32(out_neon, row_3, u_ij[i][3]); // X_i3 * Y_3
-        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);      // X_i >> B
-        vst1q_s32((fixed_point_double_t *)&m_prime_tmp[i][0], out_neon);
-    }
+    //     out_neon = vmulq_n_s32(row_0, u_ij[i][0]);           // X_i0 * Y_0
+    //     out_neon = vmlaq_n_s32(out_neon, row_1, u_ij[i][1]); // X_i1 * Y_1
+    //     out_neon = vmlaq_n_s32(out_neon, row_2, u_ij[i][2]); // X_i2 * Y_2
+    //     out_neon = vmlaq_n_s32(out_neon, row_3, u_ij[i][3]); // X_i3 * Y_3
+    //     out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);      // X_i >> B
+    //     vst1q_s32((fixed_point_double_t *)&m_prime_tmp[i][0], out_neon);
+    // }
 }
 
 /**
@@ -150,29 +150,29 @@ static void mat_mul_u_ij_x_m_NEON()
  */
 static void mat_mul_m_x_v_ij_trans_NEON()
 {
-    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+    // int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    row_0 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[0][0]); // Y_0
-    row_1 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[1][0]); // Y_1
-    row_2 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[2][0]); // Y_2
-    row_3 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[3][0]); // Y_3
+    // row_0 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[0][0]); // Y_0
+    // row_1 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[1][0]); // Y_1
+    // row_2 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[2][0]); // Y_2
+    // row_3 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[3][0]); // Y_3
 
-    for (int i = 0; i < SIZE; i++)
-    {
-        out_neon = vmulq_n_s32(row_0, m_prime_tmp[i][0]);           // X_i0 * Y_0
-        out_neon = vmlaq_n_s32(out_neon, row_1, m_prime_tmp[i][1]); // X_i1 * Y_1
-        out_neon = vmlaq_n_s32(out_neon, row_2, m_prime_tmp[i][2]); // X_i2 * Y_2
-        out_neon = vmlaq_n_s32(out_neon, row_3, m_prime_tmp[i][3]); // X_i3 * Y_3
-        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);             // X_i >> B
-        if (input == 0)
-        {
-            vst1q_s32((fixed_point_double_t *)&m_prime_2[i][0], out_neon);
-        }
-        else // input = 1;
-        {
-            vst1q_s32((fixed_point_double_t *)&m_prime_1[i][0], out_neon);
-        }
-    }
+    // for (int i = 0; i < SIZE; i++)
+    // {
+    //     out_neon = vmulq_n_s32(row_0, m_prime_tmp[i][0]);           // X_i0 * Y_0
+    //     out_neon = vmlaq_n_s32(out_neon, row_1, m_prime_tmp[i][1]); // X_i1 * Y_1
+    //     out_neon = vmlaq_n_s32(out_neon, row_2, m_prime_tmp[i][2]); // X_i2 * Y_2
+    //     out_neon = vmlaq_n_s32(out_neon, row_3, m_prime_tmp[i][3]); // X_i3 * Y_3
+    //     out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);             // X_i >> B
+    //     if (input == 0)
+    //     {
+    //         vst1q_s32((fixed_point_double_t *)&m_prime_2[i][0], out_neon);
+    //     }
+    //     else // input = 1;
+    //     {
+    //         vst1q_s32((fixed_point_double_t *)&m_prime_1[i][0], out_neon);
+    //     }
+    // }
 }
 
 /**
@@ -196,39 +196,39 @@ static void mat_mul_m_x_v_ij_trans_NEON()
  */
 static void mat_mul_v_ij_trans_x_v_trans_NEON()
 {
-    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+    // int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-    if (input == 0)
-    {
-        row_0 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[0][0]); // Y_0
-        row_1 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[1][0]); // Y_1
-        row_2 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[2][0]); // Y_2
-        row_3 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[3][0]); // Y_3
-    }
-    else
-    {
-        row_0 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[0][0]); // Y_0
-        row_1 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[1][0]); // Y_1
-        row_2 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[2][0]); // Y_2
-        row_3 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[3][0]); // Y_3
-    }
+    // if (input == 0)
+    // {
+    //     row_0 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[0][0]); // Y_0
+    //     row_1 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[1][0]); // Y_1
+    //     row_2 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[2][0]); // Y_2
+    //     row_3 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[3][0]); // Y_3
+    // }
+    // else
+    // {
+    //     row_0 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[0][0]); // Y_0
+    //     row_1 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[1][0]); // Y_1
+    //     row_2 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[2][0]); // Y_2
+    //     row_3 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[3][0]); // Y_3
+    // }
 
-    for (int i = 0; i < SIZE; i++)
-    {
-        out_neon = vmulq_n_s32(row_0, v_ij_trans[i][0]);           // X_i0 * Y_0
-        out_neon = vmlaq_n_s32(out_neon, row_1, v_ij_trans[i][1]); // X_i1 * Y_1
-        out_neon = vmlaq_n_s32(out_neon, row_2, v_ij_trans[i][2]); // X_i2 * Y_2
-        out_neon = vmlaq_n_s32(out_neon, row_3, v_ij_trans[i][3]); // X_i3 * Y_3
-        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);            // X_i >> B
-        if (input == 0)
-        {
-            vst1q_s32((fixed_point_double_t *)&v_trans_prime_2[i][0], out_neon);
-        }
-        else // input = 1;
-        {
-            vst1q_s32((fixed_point_double_t *)&v_trans_prime_1[i][0], out_neon);
-        }
-    }
+    // for (int i = 0; i < SIZE; i++)
+    // {
+    //     out_neon = vmulq_n_s32(row_0, v_ij_trans[i][0]);           // X_i0 * Y_0
+    //     out_neon = vmlaq_n_s32(out_neon, row_1, v_ij_trans[i][1]); // X_i1 * Y_1
+    //     out_neon = vmlaq_n_s32(out_neon, row_2, v_ij_trans[i][2]); // X_i2 * Y_2
+    //     out_neon = vmlaq_n_s32(out_neon, row_3, v_ij_trans[i][3]); // X_i3 * Y_3
+    //     out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);            // X_i >> B
+    //     if (input == 0)
+    //     {
+    //         vst1q_s32((fixed_point_double_t *)&v_trans_prime_2[i][0], out_neon);
+    //     }
+    //     else // input = 1;
+    //     {
+    //         vst1q_s32((fixed_point_double_t *)&v_trans_prime_1[i][0], out_neon);
+    //     }
+    // }
 }
 
 /**
@@ -298,8 +298,8 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
             __asm__ __volatile__(
                 "ASIP\t%0, %1, %2\n"
                 : "=r"(asip_result)
-                : "r"(param_pack_1)
-                : "r"(param_pack_2));
+                : "r"(param_pack_1),
+                  "r"(param_pack_2));
 
             /**
              * Do all of the angle calculations

@@ -4,119 +4,303 @@
  *
  */
 #include "svd.h"
-
-static inline fixed_point_t *access(fixed_point_t *arr, size_t size, size_t row, size_t col)
-{
-    return arr + size * row + col;
-}
+#include "arm_neon.h"
 
 /**
- * @brief Perfoms a fixed point matrix multiplication
+ * Create matricies for claculations.
  *
- * Result is placed in out[][]
+ * Two matricies are used to avoid copying. One matrix is used for input, and the
+ * other is used for output. Every iteration, the input and output matricies switch.
  *
- * @param size
- * @param LHS
- * @param RHS
- * @param out
+ * To avoid copying during the switch, just the pointers to the matricies are flipped.
  */
-void mat_mul(int size, fixed_point_t *LHS, fixed_point_t *RHS, fixed_point_t *out)
+static volatile fixed_point_double_t u_prime_1[SIZE][SIZE], u_prime_2[SIZE][SIZE];
+static volatile fixed_point_double_t v_trans_prime_1[SIZE][SIZE], v_trans_prime_2[SIZE][SIZE];
+static volatile fixed_point_double_t m_prime_1[SIZE][SIZE], m_prime_2[SIZE][SIZE];
+
+/**
+ * Create matricies for internal calculations
+ */
+static volatile fixed_point_double_t u_ij[SIZE][SIZE];
+static volatile fixed_point_double_t u_ij_trans[SIZE][SIZE];
+static volatile fixed_point_double_t v_ij_trans[SIZE][SIZE];
+static volatile fixed_point_double_t m_prime_tmp[SIZE][SIZE];
+
+// Variable to track which matrix to use for input vs. output
+static int input;
+
+/**
+ * This is the algorithm for SIMD matrix multiplication.
+ * Because we are multiplying 2 fixed_point_t numbers, the result is a 
+ * fixed_point_double_t. We to truncate the least significant bits to turn
+ * the result into a fixed_point_t for the next round of computation.
+ * 
+ * Let X denote the matrix on the LHS, and Y deonte the matrix on the RHS.
+ * Let M_in denote the the nth element in the ith row of a matrix M.
+ * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
+ * let B denote the number of bits to shift
+ *  
+ * Each row of the square matrix is calculated as such
+ * 
+ * X_i = (X_i0 * Y_0 + X_i1 * Y_1 + X_i2 * Y_2 + X_i3 * Y_3) >> B;
+ * 
+ * In this function X = U, Y = U_ij_transform, and the result is placed in
+ * U` (where U and U` are either U_prime_1 or U_prime_2 depending on input)
+ */
+static void mat_mul_u_x_u_ij_trans_NEON()
 {
-    for (int i = 0; i < size; i++)
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+
+    // Read the rows of u_ij_trans
+    row_0 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[0][0]); // Y_0
+    row_1 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[1][0]); // Y_1
+    row_2 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[2][0]); // Y_2
+    row_3 = vld1q_s32((const fixed_point_double_t *)&u_ij_trans[3][0]); // Y_3
+
+    for (int i = 0; i < SIZE; i++)
     {
-        for (int j = 0; j < size; j++)
+        // Prevent copies by switching between matricies.
+        if (input == 0)
         {
-            *access(out, size, i, j) = 0;
-            for (int k = 0; k < size; k++)
-            {
-                *access(out, size, i, j) += truncate(
-                    fixed_point_mul(
-                        *access(LHS, size, i, k),
-                        *access(RHS, size, k, j)));
-            }
+            out_neon = vmulq_n_s32(row_0, u_prime_1[i][0]);           // X_i0 * Y_0
+            out_neon = vmlaq_n_s32(out_neon, row_1, u_prime_1[i][1]); // X_i1 * Y_1
+            out_neon = vmlaq_n_s32(out_neon, row_2, u_prime_1[i][2]); // X_i2 * Y_2
+            out_neon = vmlaq_n_s32(out_neon, row_3, u_prime_1[i][3]); // X_i3 * Y_3
+            out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);           // X_i >> B
+            vst1q_s32((fixed_point_double_t *)&u_prime_2[i][0], out_neon);
+        }
+        else // input == 1
+        {
+            out_neon = vmulq_n_s32(row_0, u_prime_2[i][0]);           // X_i0 * Y_0
+            out_neon = vmlaq_n_s32(out_neon, row_1, u_prime_2[i][1]); // X_i1 * Y_1
+            out_neon = vmlaq_n_s32(out_neon, row_2, u_prime_2[i][2]); // X_i2 * Y_2
+            out_neon = vmlaq_n_s32(out_neon, row_3, u_prime_2[i][3]); // X_i3 * Y_3
+            out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);           // X_i >> B
+            vst1q_s32((fixed_point_double_t *)&u_prime_1[i][0], out_neon);
         }
     }
 }
 
-void mat_mul_u_x_u(
-    int size,
-    fixed_point_u_t *LHS,
-    fixed_point_u_t *RHS,
-    fixed_point_u_t *out) __attribute__((alias("mat_mul")));
+/**
+ * This is the algorithm for SIMD matrix multiplication.
+ * Because we are multiplying 2 fixed_point_t numbers, the result is a 
+ * fixed_point_double_t. We to truncate the least significant bits to turn
+ * the result into a fixed_point_t for the next round of computation.
+ * 
+ * Let X denote the matrix on the LHS, and Y deonte the matrix on the RHS.
+ * Let M_in denote the the nth element in the ith row of a matrix M.
+ * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
+ * let B denote the number of bits to shift
+ *  
+ * Each row of the square matrix is calculated as such
+ * 
+ * X_i = (X_i0 * Y_0 + X_i1 * Y_1 + X_i2 * Y_2 + X_i3 * Y_3) >> B;
+ * 
+ * In this function X = U_ij, Y = M, and the result is placed in m_tmp (where
+ * M is either M_prime_1 or M_prime_2 depending on input)
+ */
+static void mat_mul_u_ij_x_m_NEON()
+{
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
 
-void mat_mul_u_x_m(
-    int size,
-    fixed_point_u_t *LHS,
-    fixed_point_m_t *RHS,
-    fixed_point_m_tmp_t *out) __attribute__((alias("mat_mul")));
+    if (input == 0)
+    {
+        row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[0][0]); // Y_0
+        row_1 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[1][0]); // Y_1
+        row_2 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[2][0]); // Y_2
+        row_3 = vld1q_s32((const fixed_point_double_t *)&m_prime_1[3][0]); // Y_3
+    }
+    else // Input == 1
+    {
+        row_0 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[0][0]); // Y_0
+        row_1 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[1][0]); // Y_1
+        row_2 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[2][0]); // Y_2
+        row_3 = vld1q_s32((const fixed_point_double_t *)&m_prime_2[3][0]); // Y_3
+    }
 
-void mat_mul_m_x_v(
-    int size,
-    fixed_point_m_tmp_t *LHS,
-    fixed_point_v_t *RHS,
-    fixed_point_m_t *out) __attribute__((alias("mat_mul")));
+    for (int i = 0; i < SIZE; i++)
+    {
 
-void mat_mul_v_x_v(
-    int size,
-    fixed_point_v_t *LHS,
-    fixed_point_v_t *RHS,
-    fixed_point_v_t *out) __attribute__((alias("mat_mul")));
+        out_neon = vmulq_n_s32(row_0, u_ij[i][0]);           // X_i0 * Y_0
+        out_neon = vmlaq_n_s32(out_neon, row_1, u_ij[i][1]); // X_i1 * Y_1
+        out_neon = vmlaq_n_s32(out_neon, row_2, u_ij[i][2]); // X_i2 * Y_2
+        out_neon = vmlaq_n_s32(out_neon, row_3, u_ij[i][3]); // X_i3 * Y_3
+        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);      // X_i >> B
+        vst1q_s32((fixed_point_double_t *)&m_prime_tmp[i][0], out_neon);
+    }
+}
+
+/**
+ * This is the algorithm for SIMD matrix multiplication.
+ * Because we are multiplying 2 fixed_point_t numbers, the result is a 
+ * fixed_point_double_t. We to truncate the least significant bits to turn
+ * the result into a fixed_point_t for the next round of computation.
+ * 
+ * Let X denote the matrix on the LHS, and Y deonte the matrix on the RHS.
+ * Let M_in denote the the nth element in the ith row of a matrix M.
+ * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
+ * let B denote the number of bits to shift
+ *  
+ * Each row of the square matrix is calculated as such
+ * 
+ * X_i = (X_i0 * Y_0 + X_i1 * Y_1 + X_i2 * Y_2 + X_i3 * Y_3) >> B;
+ * 
+ * In this function X = m_tmp, Y = v_ij_trans, and the result is placed in 
+ * M` (where M` is either M_prime_1 or M_prime_2 depending on input)
+ */
+static void mat_mul_m_x_v_ij_trans_NEON()
+{
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+
+    row_0 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[0][0]); // Y_0
+    row_1 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[1][0]); // Y_1
+    row_2 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[2][0]); // Y_2
+    row_3 = vld1q_s32((const fixed_point_double_t *)&v_ij_trans[3][0]); // Y_3
+
+    for (int i = 0; i < SIZE; i++)
+    {
+        out_neon = vmulq_n_s32(row_0, m_prime_tmp[i][0]);           // X_i0 * Y_0
+        out_neon = vmlaq_n_s32(out_neon, row_1, m_prime_tmp[i][1]); // X_i1 * Y_1
+        out_neon = vmlaq_n_s32(out_neon, row_2, m_prime_tmp[i][2]); // X_i2 * Y_2
+        out_neon = vmlaq_n_s32(out_neon, row_3, m_prime_tmp[i][3]); // X_i3 * Y_3
+        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);             // X_i >> B
+        if (input == 0)
+        {
+            vst1q_s32((fixed_point_double_t *)&m_prime_2[i][0], out_neon);
+        }
+        else // input = 1;
+        {
+            vst1q_s32((fixed_point_double_t *)&m_prime_1[i][0], out_neon);
+        }
+    }
+}
+
+/**
+ * This is the algorithm for SIMD matrix multiplication.
+ * Because we are multiplying 2 fixed_point_t numbers, the result is a 
+ * fixed_point_double_t. We to truncate the least significant bits to turn
+ * the result into a fixed_point_t for the next round of computation.
+ * 
+ * Let X denote the matrix on the LHS, and Y deonte the matrix on the RHS.
+ * Let M_in denote the the nth element in the ith row of a matrix M.
+ * Let M_i denote the vector [M_i0, M_i1, M_i2, M_i3] for a matrix M
+ * let B denote the number of bits to shift
+ *  
+ * Each row of the square matrix is calculated as such
+ * 
+ * X_i = (X_i0 * Y_0 + X_i1 * Y_1 + X_i2 * Y_2 + X_i3 * Y_3) >> B;
+ * 
+ * In this function X = v_ij_trans, Y = V_trans, and the result is placed in 
+ * v_trans` (where v_trans and v_trans` are either v_trans_prime_1 or 
+ * v_trans_prime_2 depending on input)
+ */
+static void mat_mul_v_ij_trans_x_v_trans_NEON()
+{
+    int32x4_t row_0, row_1, row_2, row_3, out_neon;
+
+    if (input == 0)
+    {
+        row_0 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[0][0]); // Y_0
+        row_1 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[1][0]); // Y_1
+        row_2 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[2][0]); // Y_2
+        row_3 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_1[3][0]); // Y_3
+    }
+    else
+    {
+        row_0 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[0][0]); // Y_0
+        row_1 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[1][0]); // Y_1
+        row_2 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[2][0]); // Y_2
+        row_3 = vld1q_s32((const fixed_point_double_t *)&v_trans_prime_2[3][0]); // Y_3
+    }
+
+    for (int i = 0; i < SIZE; i++)
+    {
+        out_neon = vmulq_n_s32(row_0, v_ij_trans[i][0]);           // X_i0 * Y_0
+        out_neon = vmlaq_n_s32(out_neon, row_1, v_ij_trans[i][1]); // X_i1 * Y_1
+        out_neon = vmlaq_n_s32(out_neon, row_2, v_ij_trans[i][2]); // X_i2 * Y_2
+        out_neon = vmlaq_n_s32(out_neon, row_3, v_ij_trans[i][3]); // X_i3 * Y_3
+        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);            // X_i >> B
+        if (input == 0)
+        {
+            vst1q_s32((fixed_point_double_t *)&v_trans_prime_2[i][0], out_neon);
+        }
+        else // input = 1;
+        {
+            vst1q_s32((fixed_point_double_t *)&v_trans_prime_1[i][0], out_neon);
+        }
+    }
+}
+
+/**
+ * This is a function to set the values of u_ij, u_ij_trans and v_ij_trans be a
+ * unit matrix
+ */
+static void reset_mats()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            u_ij[i][j] = i == j ? one_u : 0;
+            u_ij_trans[i][j] = i == j ? one_u : 0;
+            v_ij_trans[i][j] = i == j ? one_v : 0;
+        }
+    }
+}
 
 /**
  * @brief Performes a single sweep of the svd algorithm
  *
  */
-void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u[size][size], floating_point_t v_trans[size][size])
+void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], floating_point_t v_trans[SIZE][SIZE])
 {
-    /**
-     * Create temporary matricies for claculations.
-     *
-     * Two matricies are used to avoid copying. One matrix is used for input, and the
-     * other is used for output. Every iteration, the input and output matricies switch.
-     *
-     * To avoid copying during the switch, just the pointers to the matricies are flipped.
-     */
-    fixed_point_u_t u_prime_1[size][size], u_prime_2[size][size];
-    fixed_point_v_t v_trans_prime_1[size][size], v_trans_prime_2[size][size];
-    fixed_point_m_t m_prime_1[size][size], m_prime_2[size][size];
-
-    /**
-     * Create a table of pointers to the matricies for calculations.
-     */
-    fixed_point_u_t *u_mats[] = {&u_prime_1[0][0], &u_prime_2[0][0]};
-    fixed_point_u_t *v_mats[] = {&v_trans_prime_1[0][0], &v_trans_prime_2[0][0]};
-    fixed_point_m_t *m_mats[] = {&m_prime_1[0][0], &m_prime_2[0][0]};
-
-    // Variables to track which matrix to use for input vs. output
-    int input = 0, output = 1;
+    input = 0;
 
     // Convert the input matricies to fixed point.
-    for (int row = 0; row < size; row++)
+    for (int row = 0; row < SIZE; row++)
     {
-        for (int col = 0; col < size; col++)
+        for (int col = 0; col < SIZE; col++)
         {
-            *access(m_mats[input], size, row, col) = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
-            *access(u_mats[input], size, row, col) = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
-            *access(v_mats[input], size, row, col) = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
+            m_prime_1[row][col] = convert_to_fixed(m[row][col], SCALE_FACTOR_M);
+            u_prime_1[row][col] = convert_to_fixed(u[row][col], SCALE_FACTOR_U);
+            v_trans_prime_1[row][col] = convert_to_fixed(v_trans[row][col], SCALE_FACTOR_V);
         }
     }
 
     /**
      * Start of iterations
      */
-    for (int i = 0; i < size - 1; i++)
+    for (int i = 0; i < SIZE - 1; i++)
     {
-        for (int j = i + 1; j < 4; j++)
+        for (int j = i + 1; j < SIZE; j++)
         {
-            fixed_point_t m_ij = *access(m_mats[input], size, i, j),
-                          m_ji = *access(m_mats[input], size, j, i),
-                          m_ii = *access(m_mats[input], size, i, i),
-                          m_jj = *access(m_mats[input], size, j, j);
+            fixed_point_t m_ij, m_ji, m_ii, m_jj;
+
+            // Read m_ij, m_ji, m_ii, m_jj from M.
+            if (input == 0)
+            {
+                m_ij = m_prime_1[i][j];
+                m_ji = m_prime_1[j][i];
+                m_ii = m_prime_1[i][i];
+                m_jj = m_prime_1[j][j];
+            }
+            else
+            {
+                m_ij = m_prime_2[i][j];
+                m_ji = m_prime_2[j][i];
+                m_ii = m_prime_2[i][i];
+                m_jj = m_prime_2[j][j];
+            }
 
             /**
              * Do all of the angle calculations
-             *
-             * TODO: Implement all of these functions.
+             * 
+             * θ_sum  = θr + θl = atan((m_ji + m_ij) / (m_jj - m_ii))
+             * θ_diff = θr - θl= atan((m_ji - m_ij) / (m_jj + m_ii))
+             * 
+             * θr = θ_diff + θl
+             * θl = θ_sum - θr = θ_sum - (θ_diff + θ_l) = (θ_sum - θ_diff) /2
+             * 
              */
             fixed_point_double_t x = fixed_point_div(m_ji + m_ij, m_jj - m_ii);
             fixed_point_t theta_sum_fixed = arctan_lookup(x);
@@ -128,27 +312,13 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             theta_l_fixed = ((fixed_point_double_t)theta_sum_fixed - (fixed_point_double_t)theta_diff_fixed) >> 1;
             theta_r_fixed = theta_sum_fixed - theta_l_fixed;
 
-            fixed_point_t sin_theta_l_fixed = sin_lookup(theta_l_fixed);
-            fixed_point_t cos_theta_l_fixed = cos_lookup(theta_l_fixed);
-            fixed_point_t sin_theta_r_fixed = sin_lookup(theta_r_fixed);
-            fixed_point_t cos_theta_r_fixed = cos_lookup(theta_r_fixed);
+            fixed_point_double_t sin_theta_l_fixed = sin_lookup(theta_l_fixed);
+            fixed_point_double_t cos_theta_l_fixed = cos_lookup(theta_l_fixed);
+            fixed_point_double_t sin_theta_r_fixed = sin_lookup(theta_r_fixed);
+            fixed_point_double_t cos_theta_r_fixed = cos_lookup(theta_r_fixed);
 
-            /**
-             * Create temporary matricies for u_ij, u_ij_trans and v_ij_trans
-             */
-            fixed_point_u_t u_ij[size][size];
-            fixed_point_u_t u_ij_trans[size][size];
-            fixed_point_v_t v_ij_trans[size][size];
-
-            memset(u_ij, 0, sizeof(fixed_point_u_t) * size * size);
-            memset(u_ij_trans, 0, sizeof(fixed_point_u_t) * size * size);
-            memset(v_ij_trans, 0, sizeof(fixed_point_v_t) * size * size);
-            for (int k = 0; k < size; k++)
-            {
-                u_ij[k][k] = one_u;
-                u_ij_trans[k][k] = one_u;
-                v_ij_trans[k][k] = one_v;
-            }
+            // Reset the matricies to unit matricies.
+            reset_mats();
 
             /**
              * U_ij = [ cos(θl) -sin(θl) ]
@@ -177,30 +347,34 @@ void sweep(const size_t size, floating_point_t m[size][size], floating_point_t u
             v_ij_trans[i][j] = sin_theta_r_fixed;
             v_ij_trans[j][i] = -sin_theta_r_fixed;
 
-            fixed_point_m_tmp_t m_prime_tmp[size][size];
-
             // Do the calculations
-            //
-            mat_mul_u_x_u(size, u_mats[input], &u_ij_trans[0][0], u_mats[output]);      // [U][U_ij_T] = [U']
-            mat_mul_u_x_m(size, &u_ij[0][0], m_mats[input], &m_prime_tmp[0][0]);        // [U_ij][M] = [M'_tmp]
-            mat_mul_m_x_v(size, &m_prime_tmp[0][0], &v_ij_trans[0][0], m_mats[output]); // [M_tmp][V_ij_T] = [M']
-            mat_mul_v_x_v(size, &v_ij_trans[0][0], v_mats[input], v_mats[output]);      // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
+            mat_mul_u_x_u_ij_trans_NEON();       // [U][U_ij_T] = [U']
+            mat_mul_u_ij_x_m_NEON();             // [U_ij][M] = [M'_tmp]
+            mat_mul_m_x_v_ij_trans_NEON();       // [M_tmp][V_ij_T] = [M']
+            mat_mul_v_ij_trans_x_v_trans_NEON(); // [V_ij][V_T] = [V'_T] <- I need to do this wrong to get it to work?????
 
             // swap input and output matricies.
-            int tmp = input;
-            input = output;
-            output = tmp;
+            input = input == 0 ? 1 : 0;
         }
     }
 
     // Convert the fixed point matricies back into floating point.
-    for (int row = 0; row < size; row++)
+    for (int row = 0; row < SIZE; row++)
     {
-        for (int col = 0; col < size; col++)
+        for (int col = 0; col < SIZE; col++)
         {
-            u[row][col] = convert_to_floating(*access(u_mats[input], size, row, col), SCALE_FACTOR_U);
-            v_trans[row][col] = convert_to_floating(*access(v_mats[input], size, row, col), SCALE_FACTOR_V);
-            m[row][col] = convert_to_floating(*access(m_mats[input], size, row, col), SCALE_FACTOR_M);
+            if (input == 0)
+            {
+                u[row][col] = convert_to_floating(u_prime_1[row][col], SCALE_FACTOR_U);
+                v_trans[row][col] = convert_to_floating(v_trans_prime_1[row][col], SCALE_FACTOR_V);
+                m[row][col] = convert_to_floating(m_prime_1[row][col], SCALE_FACTOR_M);
+            }
+            else
+            {
+                u[row][col] = convert_to_floating(u_prime_2[row][col], SCALE_FACTOR_U);
+                v_trans[row][col] = convert_to_floating(v_trans_prime_2[row][col], SCALE_FACTOR_V);
+                m[row][col] = convert_to_floating(m_prime_2[row][col], SCALE_FACTOR_M);
+            }
         }
     }
 }

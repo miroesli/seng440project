@@ -52,7 +52,7 @@ int main(void)
 
     for (int i = 0; i < 4; i++)
     {
-        sweep(4, m, u, v_trans);
+        sweep(m, u, v_trans);
         mat_print(4, m);
         printf("\n");
     }

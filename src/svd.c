@@ -292,6 +292,15 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
                 m_jj = m_prime_2[j][j];
             }
 
+            fixed_point_double_t param_pack_1 = (m_ji << 16) | m_ij;
+            fixed_point_double_t param_pack_2 = (m_ii << 16) | m_jj;
+            fixed_point_double_t asip_result;
+            __asm__ __volatile__(
+                "ASIP\t%0, %1, %2\n"
+                : "=r"(asip_result)
+                : "r"(param_pack_1)
+                : "r"(param_pack_2));
+
             /**
              * Do all of the angle calculations
              * 
@@ -302,20 +311,20 @@ void sweep(floating_point_t m[SIZE][SIZE], floating_point_t u[SIZE][SIZE], float
              * θl = θ_sum - θr = θ_sum - (θ_diff + θ_l) = (θ_sum - θ_diff) /2
              * 
              */
-            fixed_point_double_t x = fixed_point_div(m_ji + m_ij, m_jj - m_ii);
-            fixed_point_t theta_sum_fixed = arctan_lookup(x);
+            // fixed_point_double_t x = fixed_point_div(m_ji + m_ij, m_jj - m_ii);
+            // fixed_point_t theta_sum_fixed = arctan_lookup(x);
 
-            x = fixed_point_div(m_ji - m_ij, m_jj + m_ii);
-            fixed_point_t theta_diff_fixed = arctan_lookup(x);
+            // x = fixed_point_div(m_ji - m_ij, m_jj + m_ii);
+            // fixed_point_t theta_diff_fixed = arctan_lookup(x);
 
-            fixed_point_double_t theta_l_fixed, theta_r_fixed;
-            theta_l_fixed = ((fixed_point_double_t)theta_sum_fixed - (fixed_point_double_t)theta_diff_fixed) >> 1;
-            theta_r_fixed = theta_sum_fixed - theta_l_fixed;
+            // fixed_point_double_t theta_l_fixed, theta_r_fixed;
+            // theta_l_fixed = ((fixed_point_double_t)theta_sum_fixed - (fixed_point_double_t)theta_diff_fixed) >> 1;
+            // theta_r_fixed = theta_sum_fixed - theta_l_fixed;
 
-            fixed_point_double_t sin_theta_l_fixed = sin_lookup(theta_l_fixed);
-            fixed_point_double_t cos_theta_l_fixed = cos_lookup(theta_l_fixed);
-            fixed_point_double_t sin_theta_r_fixed = sin_lookup(theta_r_fixed);
-            fixed_point_double_t cos_theta_r_fixed = cos_lookup(theta_r_fixed);
+            fixed_point_double_t cos_theta_l_fixed = (asip_result & 0xFFFC0000) >> 20;
+            fixed_point_double_t sin_theta_l_fixed = (asip_result & 0x00038000) >> 17;
+            fixed_point_double_t cos_theta_r_fixed = (asip_result & 0x00007FF8) >> 3;
+            fixed_point_double_t sin_theta_r_fixed = (asip_result & 0x00000007);
 
             // Reset the matricies to unit matricies.
             reset_mats();

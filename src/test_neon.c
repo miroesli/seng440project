@@ -50,7 +50,7 @@ void matrix_multiply(
             RESULT[i][j] = 0;
             for (int k = 0; k < 4; k++)
             {
-                RESULT[i][j] += LHS[i][k] + RHS[k][j];
+                RESULT[i][j] += LHS[i][k] * RHS[k][j];
             }
         }
     }
@@ -71,7 +71,7 @@ void matrix_multiply_NEON()
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_1, X[i][1]), out_neon);
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_2, X[i][2]), out_neon);
         out_neon = vaddq_s32(vmulq_n_s32(Y_row_3, X[i][3]), out_neon);
-        out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);
+        // out_neon = vshrq_n_s32(out_neon, SHIFT_AMOUNT);
         vst1q_s32((fixed_point_double_t *)&OUT_NEON[i][0], out_neon);
     }
 }
@@ -80,7 +80,7 @@ int main(void)
 {
 
     matrix_multiply(X, Y, OUT);
-    matrix_multiply_NEON(X, Y, OUT_NEON);
+    matrix_multiply_NEON();
     print_matrix((const fixed_point_double_t *)&OUT[0][0]);
     print_matrix((const fixed_point_double_t *)&OUT_NEON[0][0]);
 

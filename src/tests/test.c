@@ -1,17 +1,18 @@
-#include "config.h"
-#include "svd.h"
-#include "svd_math.h"
-#include <assert.h>
-#include "tables/arctan_lookup_table.h"
-#include "tables/sin_lookup_table.h"
-#include "tables/cos_lookup_table.h"
-#include <math.h>
 
-floating_point_t m[4][4] = {
-    {31, 77, -11, 26},
-    {-42, 14, 79, -53},
-    {-68, -10, 45, 90},
-    {34, 16, 38, -19},
+#include <assert.h>
+#include <math.h>
+#include "../config.h"
+#include "../svd.h"
+#include "../svd_math.h"
+#include "../tables/arctan_lookup_table.h"
+#include "../tables/sin_lookup_table.h"
+#include "../tables/cos_lookup_table.h"
+
+floating_point_t m[4][4] ={
+    { 31, 77, -11, 26 },
+    { -42, 14, 79, -53 },
+    { -68, -10, 45, 90 },
+    { 34, 16, 38, -19 },
 };
 
 fixed_point_t m_fixed[4][4];

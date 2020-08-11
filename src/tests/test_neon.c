@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "arm_neon.h"
-#include "svd_math.h"
+#include "../arm_neon.h"
+#include "../svd_math.h"
 
 #define N 4
 #define M 4
@@ -21,18 +21,18 @@ void print_matrix(const fixed_point_double_t *m)
     printf("\n");
 }
 
-volatile fixed_point_double_t X[N][M] = {
-    {0, 1, 2, 3},
-    {4, 5, 6, 7},
-    {8, 9, 10, 11},
-    {12, 13, 14, 15},
+volatile fixed_point_double_t X[N][M] ={
+    { 0, 1, 2, 3 },
+    { 4, 5, 6, 7 },
+    { 8, 9, 10, 11 },
+    { 12, 13, 14, 15 },
 };
 
-volatile fixed_point_double_t Y[N][M] = {
-    {0, 1, 2, 3},
-    {4, 5, 6, 7},
-    {8, 9, 10, 11},
-    {12, 13, 14, 15},
+volatile fixed_point_double_t Y[N][M] ={
+    { 0, 1, 2, 3 },
+    { 4, 5, 6, 7 },
+    { 8, 9, 10, 11 },
+    { 12, 13, 14, 15 },
 };
 
 volatile fixed_point_double_t OUT[N][M];

@@ -41,7 +41,7 @@ gcc -mfpu=neon -03 -o outfile infile.c
 
 ### CPU profiling and Profile-driven compilation
 
-Generate the executable file with profiling turned
+Generate the executable file with profiling turned on
 
 ```bash
 gcc -pg file.c
@@ -59,7 +59,7 @@ Read the profile information
 gprof
 ```
 
-Analyse the profile informationa nd update the source file `file.c`
+Analyse the profile information and update the source file `file.c`
 
 Recompile the source file with profiling turned off
 

@@ -25,7 +25,7 @@ A project on Singular Value Decomposition (SVD) and optimizing its performance o
 
 ## Installation
 
-To download the required disk, kernel and root file system for virtual machine visit the [uvic seng repo](https://stede.seng.uvic.ca/studentrepo/?dir=./Software/seng440) using a vpn.
+To download the optional disk, kernel, and root file system for the virtual machine visit the [UVic seng repo](https://stede.seng.uvic.ca/studentrepo/?dir=./Software/seng440) using the university vpn.
 
 Create a VM in virt-manager using the settings specified in the [requirements](#requirements) section.
 

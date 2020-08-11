@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "../arm_neon.h"
+#include <arm_neon.h>
 #include "../svd_math.h"
 
 #define N 4

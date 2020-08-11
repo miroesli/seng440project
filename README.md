@@ -39,6 +39,20 @@ rootwait
 ipv6.disable=1
 ```
 
+## Compilation & Execution
+
+Run `make` in the root directory to compile the files and generate the `a.out` executable.
+
+```bash
+make
+```
+
+Run the executable.
+
+```bash 
+./a.out
+```
+
 ## Documentation
 
 To see the documentation go to the `docs` folder.

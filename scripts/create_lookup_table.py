@@ -7,9 +7,9 @@ import sys
 import numpy as np
 
 # DEBUG
-DEBUG = True
+DEBUG = False
 # Print to file
-WRITE_TO_FILE = False
+WRITE_TO_FILE = True
 # Range of arctan lookup table
 ARCTAN_TABLE_RANGE = 10
 # Constant range
@@ -93,7 +93,7 @@ def main():
     # Create c code lookup definition
     f = None
     if WRITE_TO_FILE:
-        f = open("%s_lookup_table.h" % trig_function, "w")
+        f = open("../src/tables/%s_lookup_table.h" % trig_function, "w")
 
     header_content = \
         """/*

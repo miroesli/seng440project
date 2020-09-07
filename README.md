@@ -1,4 +1,4 @@
-# svdarm
+# SVDARM
 
 A Seng440 project on Singular Value Decomposition (SVD) and optimizing its performance on an arm machine.
 

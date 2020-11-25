@@ -2,6 +2,10 @@
 
 A Seng440 project on Singular Value Decomposition (SVD) and optimizing its performance on an arm machine.
 
+## Presentation
+
+- Google Drive [slides link](https://docs.google.com/presentation/d/1UeqIaXg8Grq_rTD-jiLfbHKtbhVWDztEpM6H0MeHCRM/edit?usp=sharing)
+
 ## Requirements
 
 - Packages
